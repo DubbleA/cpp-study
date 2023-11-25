@@ -302,3 +302,144 @@ std::cout << typeid(y).name() << '\n'; // x and y
 1. Deduced types can often be seen using IDE editors, compiler error messages, and the Boost TypeIndex library.
 2. The results of some tools may be neither helpful nor accurate, so an under‐standing of C++’s type deduction rules remains essential.
 
+# Chapter 2: auto
+
+This brief chapter covers auto's ins and outs.
+
+## Item 5: Prefer auto to explicit type declarations
+
+auto variables have their type deduced from their initializer, so they must be initialized. That means you can avoid a host of unitalized variable problems by utilizing it. 
+
+```cpp
+int x1; //potentially uninitialized
+
+auto x2; // error! initializer required
+
+auto x3 = 0; //fine, x's value is well-defined
+```
+
+Because auto uses type deduction (Item 2), it can represent types known only to compilers and iterator types: 
+
+```cpp
+template<typename It> //algorithm to "do what i mean"
+void dwim(It b, It e) //for al elements in range from b to e
+{
+    while(b != e){
+        auto currValue = *b; //dereferencing iterator value type
+        ...
+    }
+}
+
+auto derefUPLess = [](const std::unique_ptr<Widget>& p1, const std::unique_ptr<Widget>& p2)
+{ return *p1 < *p2; } // comparison func for widget smart pointers
+
+//which can be simplified to in C++14: a comparison function for values pointed to by anything pointer-like
+auto derefLess = [](const auto& p1, const auto& p2) { return *p1 < *p2; }
+```
+
+Technically, we don't really need auto to declare a variable that holds a closure, because we can use a std::function object. 
+
+std::function is a template in the C++11 Standard Library that generalizes the idea of a function pointer (where std::function objects can refer to any callable object). 
+
+For example, to declare a std::function object named func that could refer to any callable object acting as if it had this signature, 
+
+```cpp
+//C++11 signature for unique ptr comparison function
+bool(const std::unique_ptr<Widget>&, const std::unique_ptr<Widget>&) 
+```
+
+you could write:
+
+```cpp
+std::function<bool(const std::unique_ptr<Widget>&, const std::unique_ptr<Widget>&)> func;
+``` 
+
+And since lambda expressions yield callable objects, closures can be stored in std::function objects. That means we could declare this:
+
+```cpp
+std::function<bool(const std::unique_ptr<Widget>&, 
+                   const std::unique_ptr<Widget>&)> 
+derefUPLess = [](const std::unique_ptr<Widget>& p1, 
+                 const std::unique_ptr<Widget>& p2) 
+                 { return *p1 < *p2; }
+```
+
+It is important to note that using std::function is not the same as using auto. An auto-declared variable holding a closure has the same type as the closure, and as such it only uses as much memory as the closure requires.
+
+The type of a std::function declared variable holding a closure is an instantiation of the std::function template, and has a fixed size for any given signature. When we need more space, the std::function constructor will allocate heap memory to store the closure. 
+
+The result is that the std::function object typically uses more memory than the auto-declared object. (also behind the scenes due to implementation details that restrict inlining and yield indirect function calls, invoking a closure via std::function is almost certain to be slower than calling it via an auto declared object). 
+
+The moral of the story is that std::function approach is generally bigger and slower than the auto approach, and it might yield out-of-memory exceptions. 
+
+```cpp
+std::unordered_map<std::string, int> m;
+…
+for (const std::pair<std::string, int>& p : m)
+{
+ … // do something with p
+}
+```
+
+Remember that the key part of a std::unordered_map is const, so the type of std::pair in the hash table (which is what a std::unordered_map is) isn’t std::pair<std::string, int>, it’s std::pair <const std::string, int>. But that’s not the type declared for the variable p in the loop above. As a result, compilers will strive to find a way to convert objects (i.e., what’s in the hash table) to the declared type for p. They’ll succeed by
+creating a temporary object of the type that p wants to bind to by copying each object in m, then binding the reference p to that temporary object. At the end of each loop iteration, the temporary object will be destroyed.
+
+To avoid unintentional type mismatches and inefficient loops we can simply:
+
+```cpp
+for (const auto& p : m){
+    ...
+}
+```
+
+As an added bonus: if you take p's address, you will get a pointer to an element within m. In a code not using auto, you'd get a pointer to a temporary object that would have to be destroyed at the end of the loop iteration. 
+
+Yet auto isn't perfect. The type for each auto variable is deduced from its initalizing expression, and some initializing expressions have types that are neither anticipated nor desired. 
+
+### Things to Remember 
+
+1. auto variables must be initialized, are generally immune to type mismatches that can lead to portability or efficiency problems, can ease the process of refactoring, and typically require less typing than variables with explicitly specified types.
+2. auto-typed variables are subject to the pitfalls described in Items 2 and 6.
+
+
+## Item 6: Use the explicitly typed initializer idom when auto deduces undesired types. 
+
+suppose I have a function that takes a Widget and returns a std::vector<bool>, where each bool indicates whether the Widget offers a particular feature:
+
+```cpp
+std::vector<bool> features(const Widget& w);
+
+Widget w;
+
+bool highPriority = features(w)[5]; // is w high priority?
+
+processWidget(w, highPriority); // process w in accord with its priority
+
+auto highPriority = features(w)[5]; // is w high priority?
+
+processWidget(w, highPriority); // undefined behavior! The code will still compile, but the behavior is no longer predictable
+``` 
+
+Here:
+1. features returns a std::vector<bool> object
+2. on which operator[] is invoked
+3. operator[] returns a std::vector<bool>::reference object
+4. std::vector<bool>::reference has a feature to implicitly convert to bool (not bool& -> bool)
+
+When this cast is done with auto, the result is highPriority containing a danging pointer. This is because std::vector<bool>::reference is an example of a `proxy class`: a class that exists for the purpose of emulating and augmenting the behavior of some other type. As a general rule, "invisible" proxy classes don't play well with auto. Objects of such classes are often not designed to live longer than a single statement, so creating variables of those types tends to violate fundamental library design assumptions. 
+
+The solution is to force a different type deduction using the `the explicitly typed initializer idiom`. The explicitly typed initializer idiom involves declaring a variable with auto, but casting the initialization expression to the type you want auto to deduce. Using our example:
+
+```cpp
+auto highPriority = static_cast<bool>(features(w)[5]);\
+```
+
+### Things to Remember 
+
+1. “Invisible” proxy types can cause auto to deduce the “wrong” type for an ini‐
+tializing expression.
+2. The explicitly typed initializer idiom forces auto to deduce the type you want
+it to have.
+
+# Chapter 3: Moving to Modern C++
+
