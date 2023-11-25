@@ -443,3 +443,118 @@ it to have.
 
 # Chapter 3: Moving to Modern C++
 
+This chapter helps answer the questions of: When should you use braces instead of parentheses for object creation? Why are alias declarations better than typedefs? How does constexpr differ from const? What's the relationship between const member functions and thread safety?
+
+## Item 7: Distinguish between () and {} when creating objects. 
+
+Using braces, specifying the initial contents of a container & default initialization values for non-static data members is easy:
+```cpp
+std::vector<int> v{ 1, 3, 5 }; // v's initial content is 1, 3, 5
+
+class Widget {
+ …
+private:
+ int x{ 0 }; // fine, x's default value is 0
+ int y = 0; // also fine
+ int z(0); // error!
+
+ std::atomic<int> ai1{ 0 }; // fine
+ std::atomic<int> ai2(0); // fine
+ std::atomic<int> ai3 = 0; // error!
+};
+```
+
+### Things to Remember
+
+1. Braced initialization is the most widely usable initialization syntax, it prevents narrowing conversions, and it's immune to C++'s most vexing parse (Widget w2() declares a function named w2 that returns a Widget).
+2. During constructor overload resolution, braced initializers are matched to std::initializer_list parameters if at all possibnle, even if other constructors offer seemingly better matches. 
+3. An example of where the choice between parentheses and braces can make a significant difference is creating a std::vector<`numeric type`> with two arguments. 
+4. Choosing between parentheses and braces for object creation inside templates can be challenging. 
+
+## Item 8: Prefer nullptr to 0 and NULL
+
+The literal 0 is an int, not a pointer. If C++ finds itself looking at 0 in a context where only a pointer can be used, it will interpret 0 as a null pointer as a fallback position. The same is true of NULL. There is some uncertainty in the details
+in NULL’s case, because implementations are allowed to give NULL an integral type other than int (e.g., long). That’s not common, but it doesn’t really matter, because the issue here isn’t the exact type of NULL, it’s that neither 0 nor NULL has a pointer type.
+
+in C++98 passing 0 or NULL to such overloads never called a pointer overload:
+
+```cpp
+void f(int); // three overloads of f
+void f(bool);
+void f(void*);
+
+f(0); // calls f(int), not f(void*)
+f(NULL); // might not compile, but typically calls f(int). Never calls f(void*)
+```
+
+nullptr’s advantage is that it doesn’t have an integral type. It doesn’t have a pointer type, but you can think of it as a pointer of all types. nullptr’s actual type is std::nullptr_t, and circular definition, std::nullptr_t is defined to be the type of nullptr. The type std::nullptr_t implicitly converts to all raw pointer types, and that’s what makes nullptr act as if it were a pointer of all types.
+
+Calling the overloaded function f with nullptr calls the void* overload (i.e., the pointer overload), because nullptr can’t be viewed as anything integral:
+
+```cpp
+f(nullptr); // calls f(void*) overload
+```
+
+Using nullptr instead of 0 or NULL thus avoids overload resolution surprises, but that’s not its only advantage. It can also improve code clarity, especially when auto variables are involved.
+
+### Things to Remember
+1. Prefer nullptr to 0 and NULL.
+2. Avoid overloading on integral and pointer types.
+
+## Item 9: Prefer alias declarations to typedefs
+
+To avoid writing types like `std::unique_ptr<std::unordered_map<std::string, std::string>>` more than once, we can use typedefs. 
+
+```cpp
+typedef std::unique_ptr<std::unordered_map<std::string, std::string>> UPtrMapSS;
+ ```
+
+ typedefs are traditionally used in C++98, they work in C++11 but C++11 offers alias declarations:
+ ```cpp
+ using UPtrMapSS = std::unique_ptr<std::unordered_map<std::string, std::string>>;
+```
+
+Given that the typedef and the alias declaration do exactly the same thing, it’s reasonable to wonder whether there is a solid technical reason for preferring one over the other. But a compelling reason does exist: templates. In particular, alias declarations may be templatized (in which case they’re called alias templates), while typedefs cannot.
+
+```cpp
+template<typename T> // MyAllocList<T>
+using MyAllocList = std::list<T, MyAlloc<T>>; // is synonym for std::list<T, MyAlloc<T>>
+MyAllocList<Widget> lw; // client code
+
+//with typedef:
+template<typename T> // MyAllocList<T>::type
+struct MyAllocList {
+ typedef std::list<T, MyAlloc<T>> type; // is synonym for std::list<T, MyAlloc<T>>
+};
+MyAllocList<Widget>::type lw; // client code
+```
+
+If you’ve done any template metaprogramming (TMP), you’ve almost certainly bumped up against the need to take template type parameters and create revised types from them. For example, given some type T, you might want to strip off any constor reference-qualifiers that T contains, e.g., you might want to turn const std::string& into std::string. Or you might want to add const to a type or turn it into an lvalue reference, e.g., turn Widget into const Widget or into Widget&.
+
+C++11 gives you the tools to perform these kinds of transformations in the form of type traits, an assortment of templates inside the header <type_traits>. There are dozens of type traits in that header, and not all of them perform type transformations, but the ones that do offer a predictable interface. Given a type T to which you’d like to apply a transformation, the resulting type is std::transformation<T>::type. For example:
+```cpp
+std::remove_const<T>::type // yields T from const T
+std::remove_const_t<T> // C++14 equivalent const T → T
+
+std::remove_reference<T>::type // yields T from T& and T&&
+std::remove_reference_t<T> // C++14 equivalent T&/T&& → T
+
+std::add_lvalue_reference<T>::type // yields T& from T
+std::add_lvalue_reference_t<T> // C++14 equivalent T → T&
+
+template <class T>
+using remove_const_t = typename remove_const<T>::type;
+
+template <class T>
+using remove_reference_t = typename remove_reference<T>::type;
+
+template <class T>
+using add_lvalue_reference_t = typename add_lvalue_reference<T>::type;
+```
+
+### Things to remember
+
+1. typedefs don't support templatization, but alias declarations do.
+2. Alias templates avoid the "::type" suffix and, in templates, the "typename" prefix often required to refer to typedefs.
+3. C++14 offers alias templates for all the C++11 type traits transformations.
+
