@@ -558,3 +558,193 @@ using add_lvalue_reference_t = typename add_lvalue_reference<T>::type;
 2. Alias templates avoid the "::type" suffix and, in templates, the "typename" prefix often required to refer to typedefs.
 3. C++14 offers alias templates for all the C++11 type traits transformations.
 
+## Item 10: Prefer scoped enums to unscoped enums
+
+As a general rule, declaring a name inside curly braces limits the visibility of that
+name to the scope defined by the braces.
+
+This is not the case for unscoped C++98-style enums. The names of such enumerators belong to the scope containing the enum, meaining that nothing else in that scope may have the same name:
+
+```cpp
+enum Color { black, white, red }; // black, white, red are in same scope as Color
+auto white = false; // error! white already declared in this scope
+```
+
+Their new C++11 counterparts, scoped enums, don’t leak names in this way:
+
+```cpp
+enum class Color { black, white, red }; // black, white, red are scoped to Color
+auto white = false; // fine, no other "white" in scope
+Color c = white; // error! no enumerator named "white" is in this scope
+Color c = Color::white; // fine
+auto c = Color::white; // also fine (and in accord with Item 5's advice)
+```
+
+Because scoped enums are declared via “enum class”, they’re sometimes referred to as enum classes. Scoped enums have a second compelling advantage: their enumerators are much more strongly typed. Enumerators for unscoped enums implicitly convert to integral types (and, from there, to floating-point types).
+
+```cpp
+enum Color { black, white, red }; // unscoped enum
+std::vector<std::size_t> // func. returning
+ primeFactors(std::size_t x); // prime factors of x
+Color c = red;
+…
+if (c < 14.5) { // compare Color to double (!)
+ auto factors = // compute prime factors
+ primeFactors(c); // of a Color (!)
+ …
+}
+
+enum class Color { black, white, red }; // enum is now scoped
+Color c = Color::red; // as before, but with scope qualifier
+… 
+if (c < 14.5) { // error! can't compare Color and double
+auto factors = // error! can't pass Color to
+ primeFactors(c); // function expecting std::size_t
+ …
+}
+```
+
+### Things to Remember
+
+1. C++98-style enums are now known as unscoped enums.
+2. Enumerators of scoped enums are visible only within the enum. They convert to other types only with a cast.
+3. Both scoped and unscoped enums support specification of the underlying type. The default underlying type for scoped enums is int. Unscoped enums have no default underlying type.
+4. Scoped enums may always be forward-declared. Unscoped enums may be forward-declared only if their declaration specifies an underlying type.
+
+## Item 11: Prefer deleted functions to private undefined ones
+
+If you want to prevent them from calling a particular function, you generally just don’t declare the function. No function declaration, no function to call. But sometimes C++ declares functions for you, and if you want to prevent clients from calling those functions things become more complicated. 
+
+The situation arises only for the “special member functions,” i.e., the member functions that C++ automatically generates when they’re needed. Item 17 discusses these functions in detail, but for now, we’ll worry only about the copy constructor and the copy assignment operator.
+
+The C++98 approach to preventing use of these functions is to declare them private
+and not define them:
+
+```cpp
+template <class charT, class traits = char_traits<charT> >
+class basic_ios : public ios_base {
+public:
+ …
+private:
+ basic_ios(const basic_ios& ); // not defined
+ basic_ios& operator=(const basic_ios&); // not defined
+};
+```
+
+in C++11, there's a better way to achieve essentially the same end: "= delete" to mark the copy constructor and the copy assignment operator as deleted functions. 
+
+```cpp
+template <class charT, class traits = char_traits<charT>>
+class basic_ios : public ios_base {
+public:
+ …
+ basic_ios(const basic_ios& ) = delete;
+ basic_ios& operator=(const basic_ios&) = delete;
+ …
+};
+```
+
+Deleted functions may not be used in any way, so even code that’s in member and friend functions will fail to compile if it tries to copy basic_ios objects. That’s an improvement over the C++98 behavior, where such improper usage wouldn’t be diagnosed until link-time. An important advantage of deleted functions is that any function may be deleted, while only member functions may be private.
+
+One way to accomplish that is to create deleted overloads for the types we want to filter out:
+
+```cpp
+bool isLucky(int number); // original function
+bool isLucky(char) = delete; // reject chars
+bool isLucky(bool) = delete; // reject bools
+bool isLucky(double) = delete; // reject doubles and floats
+```
+
+### Things to Remember
+
+1. Prefer deleted functions to private undefined ones.
+2. Any function may be deleted, including non-member functions and template instantiations.
+
+## Item 12: Declare overriding functions override
+
+The world of object-oriented programming in C++ revolves around classes, inheritance, and virtual functions. Among the most fundamental ideas in this world is that virtual function implementations in derived classes override the implementations of their base class counterparts.
+
+```cpp
+class Base {
+public:
+ virtual void doWork(); // base class virtual function
+ …
+};
+class Derived: public Base {
+public:
+ virtual void doWork(); // overrides Base::doWork
+ … // ("virtual" is optional here
+}; 
+std::unique_ptr<Base> upb = // create base class pointer
+std::make_unique<Derived>(); // to derived class object; see Item 21 for info on std::make_unique
+upb->doWork(); // call doWork through base class ptr; derived class function is invoked
+```
+
+For overriding to occur, severa requirements must be met:
+
+- The base class function must be virtual.
+- The base and derived function names must be identical (except in the case of destructors). 
+- The parameter types of the base and derived functions must be identical.
+- The constness of the base and derived functions must be identical.
+- The return types and exception specifications of the base and derived functions must be compatible.
+- The functions’ reference qualifiers must be identical. Member function reference qualifiers are one of C++11’s less-publicized features, so don’t be surprised if you’ve never heard of them. They make it possible to limit use of a member function to lvalues only or to rvalues only. Member functions need not be virtual to use them:
+
+```cpp
+class Widget {
+public:
+ …
+ void doWork() &; // this version of doWork applies only when *this is an lvalue
+ void doWork() &&; // this version of doWork applies only when *this is an rvalue
+};
+…
+Widget makeWidget(); // factory function (returns rvalue)
+Widget w; // normal object (an lvalue)
+…
+w.doWork(); // calls Widget::doWork for lvalues (i.e., Widget::doWork &)
+makeWidget().doWork(); // calls Widget::doWork for rvalues (i.e., Widget::doWork &&)
+```
+
+```cpp
+
+class Base {
+public:
+ virtual void mf1() const;
+ virtual void mf2(int x);
+ virtual void mf3() &;
+ void mf4() const;
+};
+class Derived: public Base {
+public:
+ virtual void mf1(); //warning! mf1 is declared const in Base, but not in Derived.
+ virtual void mf2(unsigned int x); //warning! mf2 takes an int in Base, but an unsigned int in Derived.
+ virtual void mf3() &&; //warning! mf3 is lvalue-qualified in Base, but rvalue-qualified in Derived.
+ void mf4() const; //warning! mf4 isn’t declared virtual in Base.
+};
+```
+
+The correct version is:
+
+```cpp
+class Base {
+public:
+ virtual void mf1() const;
+ virtual void mf2(int x);
+ virtual void mf3() &;
+ virtual void mf4() const;
+};
+class Derived: public Base {
+public:
+ virtual void mf1() const override;
+ virtual void mf2(int x) override;
+ virtual void mf3() & override;
+ void mf4() const override; // adding "virtual" is OK, but not necessary
+};
+```
+
+### Things to Remember
+
+1. Declare overriding functions override.
+2. Member function reference qualifiers make it possible to treat lvalue and rvalue objects (*this) differently
+
+## Item 13: Prefer const_iterators to iterators
+
