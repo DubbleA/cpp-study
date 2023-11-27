@@ -748,3 +748,134 @@ public:
 
 ## Item 13: Prefer const_iterators to iterators
 
+Const_iterators are the STL equivalent of pointers-to-const. They point to values that may not be modified. The standard practice of using const whenever possible dictates that you should use const_iterators any time you need an iterator, yet have no need to modify what the iterator points to.
+
+The container member functions cbegin and cend produce const_iterators, even for non-const containers, and STL member functions that use iterators to identify positions (e.g., insert and erase) actually use const_iterators. 
+
+```cpp
+std::vector<int> values; // as before
+…
+auto it = std::find(values.cbegin(),values.cend(), 1983); // use cbegin and cend
+
+values.insert(it, 1998);
+``` 
+
+About the only situation in which C++11’s support for const_iterators comes up a bit short is when you want to write maximally generic library code. Such code takes into account that some containers and container-like data structures offer begin and end (plus cbegin, cend, rbegin, etc.) as non-member functions, rather than members
+
+For example, we could generalize the code we’ve been working with into a findAndInsert template as follows:
+```cpp
+template<typename C, typename V>
+void findAndInsert(C& container, // in container, find
+ const V& targetVal, // first occurrence
+ const V& insertVal) // of targetVal, then
+{ // insert insertVal
+ using std::cbegin; // there
+ using std::cend;
+ auto it = std::find(cbegin(container), // non-member cbegin
+ cend(container), // non-member cend
+ targetVal);
+ container.insert(it, insertVal);
+}
+```
+
+This works fine in C++14, but, sadly, not in C++11. Through an oversight during standardization, C++11 added the non-member functions begin and end, but it failed to add cbegin, cend, rbegin, rend, crbegin, and crend. C++14 rectifies that oversight.
+
+### Things to Remember
+
+1. Prefer const_iterators to iterators.
+2. In maximally generic code, prefer non-member versions of begin, end, rbegin, etc., over their member function counterparts
+
+## Item 14: Declare functions noexcept if they won't emit exceptions
+During work on C++11, a consensus emerged that the truly meaningful information
+about a function’s exception-emitting behavior was whether it had any. There’s an additional incentive to apply noexcept to functions that won’t produce exceptions: it permits compilers to generate better object code.
+
+The difference between unwinding the call stack and possibly unwinding it has a surprisingly large impact on code generation. 
+
+In a noexcept function, optimizers dont need to keep the runtime stack in an unwindable state if an exception would propagate out of the function, nor must they ensure that objects in a noexcept function are destroyed in the inverse order of construction should an exception leave the function.
+
+Functions with “throw()” exception specifications lack such optimization flexibility, as do functions with no exception specification at all. The situation can be summarized this way:
+```cpp
+RetType function(params) noexcept; // most optimizable
+RetType function(params) throw(); // less optimizable
+RetType function(params); // less optimizable
+```
+This alone is sufficient reason to declare functions noexcept whenever you know they won’t produce
+exceptions.
+
+Swap functions comprise another case where noexcept is particularly desirable. swap is a key component of many STL algorithm implementations, and it’s commonly employed in copy assignment operators, too. 
+
+For example, the declarations for the Standard Library’s swaps for arrays and std::pair are:
+```cpp
+template <class T, size_t N>
+void swap(T (&a)[N], // see
+ T (&b)[N]) noexcept(noexcept(swap(*a, *b))); // below
+template <class T1, class T2>
+struct pair {
+ …
+ void swap(pair& p) noexcept(noexcept(swap(first, p.first)) && noexcept(swap(second, p.second)));
+ …
+};
+```
+These functions are conditionally noexcept: whether they are noexcept depends on whether the expressions inside the noexcept clauses are noexcept. 
+
+Optimization is important, but correctness is more important. noexcept is part of a function’s interface, so you should declare a function noexcept only if you are willing to commit to a noexcept implementation over the long term. If you declare a function noexcept and later regret that decision, your options are bleak. You can remove noexcept from the function’s declaration (i.e., change its interface),
+thus running the risk of breaking client code. 
+
+### Things to remember
+
+1. noexcept is part of a function's interface, and that means that callers may depend on it. 
+2. noexcept functions are more optimizable than non-noexcept functions.
+3. noexcept is particularly valueable for the move operations, swap, memory deallocation functions, and destructors. 
+4. Most functions are exception-neutral rather than noexcept
+
+## Item 15: Use constexpr whenever possible
+
+constexpr objects are const objects that have values that are known at compile time. Values known during compilation are privileged. They may be placed in read-only memory, for example, and especially for developers of embedded systems, this can be a very important. The benefit of trying to move computation from runtime to compile time can result in optimized processes, as you only have to "do the work" upfront at compile time once.
+
+It is important to note that marking something constexpr does not guarantee that it will be evaluated at compile time, it's more of a nudge to the compiler that it can be. 
+
+Simply put, all constexpr objects are const, but not all const objects are constexpr. If you want compilers to guarantee that a variable has a value that can be used in contexts requiring compile-time constants, the tool to reach for is constexpr, not const.
+
+Usage scenarios for constexpr objects become more interesting when constexpr functions are involved. Such functions produce compile-time constants when they are called with compile-time constants. If they’re called with values not known until runtime, they produce runtime values. This may sound as if you don’t know what they’ll do, but that’s the wrong way to think about it. The right way to view it is this:
+- constexpr functions can be used in contexts that demand compile-time constants. If the values of the arguments you pass to a constexpr function in such a context are known during compilation, the result will be computed during compilation. If any of the arguments’ values is not known during compilation, your code will be rejected.
+- When a constexpr function is called with one or more values that are not known during compilation, it acts like a normal function, computing its result at runtime. This means you don’t need two functions to perform the same operation, one for compile-time constants and one for all other values. The constexpr
+function does it all.
+
+```cpp
+constexpr // pow's a constexpr func
+int pow(int base, int exp) noexcept // that never throws
+{
+ … // impl is below
+}
+constexpr auto numConds = 5; // # of conditions
+std::array<int, pow(3, numConds)> results; // results has
+ // 3^numConds
+// elements
+
+auto base = readFromDB("base"); // get these values
+auto exp = readFromDB("exponent"); // at runtime
+auto baseToExp = pow(base, exp); // call pow function at runtime
+...
+
+// return reflection of p with respect to the origin (C++14)
+constexpr Point reflection(const Point& p) noexcept
+{
+ Point result; // create non-const Point
+ result.setX(-p.xValue()); // set its x and y values
+ result.setY(-p.yValue());
+ return result; // return copy of it
+}
+
+constexpr Point p1(9.4, 27.7); // as above
+constexpr Point p2(28.8, 5.3);
+constexpr auto mid = midpoint(p1, p2);
+constexpr auto reflectedMid = reflection(mid); // reflectedMid's value is (-19.1 -16.5) and known during compilation
+```
+
+### Things to Remember
+
+1. constexpr objects are const and are initialized with values known during compilation
+2. constexpr functions can produce compile-time results when called with arguments whose values are known during compilation.
+3.  constexpr objects and functions may be used in a wider range of contexts than non-constexpr objects and functions.
+4. constexpr is part of an object’s or function’s interface.
+
