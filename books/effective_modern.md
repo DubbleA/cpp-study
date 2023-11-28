@@ -879,3 +879,158 @@ constexpr auto reflectedMid = reflection(mid); // reflectedMid's value is (-19.1
 3.  constexpr objects and functions may be used in a wider range of contexts than non-constexpr objects and functions.
 4. constexpr is part of an object’s or function’s interface.
 
+## Item 16: Make const member functions thread safe
+
+Lets say we're working in a mathematical domain where we are developing a class to represent polynomials. Within the class we're going to need a function to compute the root(s) of a polynomial (i.e. values where the polynomial evaluates to 0). Such a function would not modify the polynomial so it would be natural to declare it const:
+
+```cpp
+class Polynomial {
+public:
+// data structure holding values where polynomial evals to zero (see Item 9 for info on "using")
+ using RootsType = std::vector<double>; 
+ … 
+ RootsType roots() const;
+ …
+};
+```
+
+Computing the roots of a polynomial can be expensive, so we don’t want to do it if we don’t have to. And if we do have to do it, we certainly don’t want to do it more than once. We’ll thus cache the root(s) of the polynomial if we have to compute them, and we’ll implement roots to return the cached value. 
+
+```cpp
+class Polynomial {
+public:
+ using RootsType = std::vector<double>;
+ RootsType roots() const
+ {
+ if (!rootsAreValid) { // if cache not valid
+ … // compute roots,
+ // store them in rootVals
+ rootsAreValid = true;
+ }
+ return rootVals;
+ }
+private:
+ mutable bool rootsAreValid{ false }; // see Item 7 for info
+ mutable RootsType rootVals{}; // on initializers
+};
+```
+
+Conceptually, roots doesn’t change the Polynomial object on which it operates, but, as part of its caching activity, it may need to modify rootVals and rootsAreValid. That’s a classic use case for mutable, and that’s why it’s part of the declarations for these data members. 
+
+The problem arises when two threads simulataneously call `roots` on a Polynomial object. Even though the function is marked const, one or both of these threads might try to modify the data members rootsAreValid and rootVals. Meaning that this code could have different threads reading and writing the same memory without synchronization. (Thats the definition of a data race. This code has undefined behavior)
+
+The easiest way to address the issue is the usual one: employ a mutex:
+```cpp
+class Polynomial {
+public:
+ using RootsType = std::vector<double>;
+ RootsType roots() const
+ {
+ std::lock_guard<std::mutex> g(m); // lock mutex
+ if (!rootsAreValid) { // if cache not valid
+ … // compute/store roots
+ rootsAreValid = true;
+ }
+ return rootVals;
+ } // unlock mutex
+private:
+ mutable std::mutex m;
+ mutable bool rootsAreValid{ false };
+ mutable RootsType rootVals{};
+};
+```
+
+It’s worth noting that because std::mutex is a move-only type (i.e., a type that can be moved, but not copied), a side effect of adding m to Polynomial is that Polynomial loses the ability to be copied. It can still be moved, however. 
+
+In some situations, a mutex is overkill. For example, if all you’re doing is counting
+how many times a member function is called, a std::atomic counter (i.e, one where
+other threads are guaranteed to see its operations occur indivisibly—see Item 40) will
+often be a less expensive way to go. 
+
+### Things to Remember
+
+1. Make const member functions thread safe unless you’re certain they’ll never be used in a concurrent context.
+2. Use of std::atomic variables may offer better performance than a mutex, but they’re suited for manipulation of only a single variable or memory location.
+
+## Item 17: Understand special member function generation
+
+The special member functions are the ones that C++ is willing to generate on its own. C++98 has four such functions: the default constructor, the destructor, the copy constructor, and the copy assignment operator. 
+
+These functions are generated only if they’re needed, i.e., if some code uses them without their being expressly declared in the class. A default constructor is generated only if the class declares no constructors at all. 
+
+As of C++11, the special member functions club has two more inductees: the move constructor and the move assignment operator. Their signatures are:
+
+```cpp
+class Widget {
+public:
+ …
+ Widget(Widget&& rhs); // move constructor
+ Widget& operator=(Widget&& rhs); // move assignment operator
+ …
+};
+```
+
+Move operations are generated for classses (when needed) only if these three things are true:
+- No copy operations are declared in the class.
+- No move operations are declared in the class. 
+- No destructor is declared in the class. 
+
+At some point, analogous rules may be extended to the copy operations, because
+C++11 deprecates the automatic generation of copy operations for classes declaring
+copy operations or a destructor. 
+
+Provided the behavior of the compiler-generated functions is correct (i.e, if memberwise copying of the class’s non-static data members is what you want), your job is easy, because C++11’s “= default” lets you say that explicitly:
+
+```cpp
+class Widget {
+public:
+ …
+ ~Widget(); // user-declared dtor
+ … // default copy ctor
+ Widget(const Widget&) = default; // behavior is OK
+ Widget& // default copy assign
+    operator=(const Widget&) = default; // behavior is OK
+ …
+};
+```
+This approach is often useful in polymorphic base classes, i.e., classes defining interfaces through which derived class objects are manipulated. Declaring the move operations disables the copy operations, so if copyability is also desired, one more round of “= default” does the job:
+
+```cpp
+class Base {
+public:
+ virtual ~Base() = default; // make dtor virtual
+ Base(Base&&) = default; // support moving
+ Base& operator=(Base&&) = default;
+ Base(const Base&) = default; // support copying
+ Base& operator=(const Base&) = default;
+ …
+};
+```
+
+The C++11 rules governing the special member functions are thus:
+- Default constructor: Same rules as C++98. Generated only if the class contains no user-declared constructors.
+- Destructor: Essentially same rules as C++98; sole difference is that destructors are noexcept by default (see Item 14). As in C++98, virtual only if a base class destructor is virtual.
+- Copy constructor: Same runtime behavior as C++98: memberwise copy construction of non-static data members. Generated only if the class lacks a userdeclared copy constructor. Deleted if the class declares a move operation. Generation of this function in a class with a user-declared copy assignment operator or destructor is deprecated.
+- Copy assignment operator: Same runtime behavior as C++98: memberwise copy assignment of non-static data members. Generated only if the class lacks a user-declared copy assignment operator. Deleted if the class declares a move operation. Generation of this function in a class with a user-declared copy constructor or destructor is deprecated.
+- Move constructor and move assignment operator: Each performs memberwise moving of non-static data members. Generated only if the class contains no userdeclared copy operations, move operations, or destructor. Note that there’s nothing in the rules about the existence of a member function template preventing compilers from generating the special member functions. That means that if Widget looks like this:
+
+```cpp
+class Widget {
+ …
+ template<typename T> // construct Widget
+ Widget(const T& rhs); // from anything
+ template<typename T> // assign Widget
+ Widget& operator=(const T& rhs); // from anything
+ …
+};
+```
+
+### Things to Remember
+
+1. The special member functions are those compilers may generate on their own: default constructor, destructor, copy operations, and move operations.
+2. Move operations are generated only for classes lacking explicitly declared move operations, copy operations, and a destructor
+3. The copy constructor is generated only for classes lacking an explicitly declared copy constructor, and it’s deleted if a move operation is declared. The copy assignment operator is generated only for classes lacking an explicitly declared copy assignment operator, and it’s deleted if a move operation is declared. Generation of the copy operations in classes with an explicitly declared destructor is deprecated.
+4. Member function templates never suppress generation of special member functions.
+
+# Chapter 4: Smart Pointers
+
