@@ -1034,3 +1034,119 @@ class Widget {
 
 # Chapter 4: Smart Pointers
 
+Flaws with raw pointers:
+
+1. Its declaration doesn't indicate whether it points to a single object or to an array.
+2. Its declaration reveals nothing about whether you should destroy what it points to when you're done using it.
+3. If you determine that you should destroy what the pointer points to, there's no way to tell how. (delete, or diff destruction mechanism??? i.e. dedicated destruction function)
+4. If we know we are using delete, should we use "delete" or "delete[]"? Using the wrong form results in undefined behavior.
+5. If we know that the pointer owns what it points to and you discover how to destroy it, it’s difficult to ensure that you perform the destruction exactly once along every path in your code (including those due to exceptions). Missing a path leads to resource leaks, and doing the destruction more than once leads to undefined behavior.
+6. There’s typically no way to tell if the pointer dangles, i.e., points to memory that no longer holds the object the pointer is supposed to point to. Dangling pointers arise when objects are destroyed while pointers still point to them.
+
+Smart pointers are wrappers around raw pointers that act much like the raw pointers they wrap, but that avoid many of their pitfalls. Smart pointers can do virtually everything raw pointers can, but with far fewer opportunities for error.
+
+There are four smart pointers in C++11: std::auto_ptr, std::unique_ptr, std::shared_ptr, and std::weak_ptr.
+
+std::auto_ptr is a deprecated leftover from C++98. It was an attempt to standardize what later became C++11’s std::unique_ptr.
+
+std::unique_ptr does everything std::auto_ptr does, plus more. It does it as efficiently, and it does it without warping what it means to copy an object. It’s better than std::auto_ptr in every way. The only legitimate use case for std::auto_ptr is a need to compile code with C++98 compilers. Unless you have that constraint, you should replace std::auto_ptr with std::unique_ptr.
+
+The smart pointer APIs are remarkably varied. About the only functionality common
+to all is default construction. Comprehensive references for these APIs are
+widely available, 
+
+## Item 18: Use std::unique_ptr for exclusive-ownership resource management
+
+When you reach for a smart pointer, std::unique_ptr should generally be the one closest at hand. It’s reasonable to assume that, by default, std::unique_ptrs are the same size as raw pointers, and for most operations (including dereferencing), they execute exactly the same instructions. This means you can use them even in situations where memory and cycles are tight. If a raw pointer is small enough and fast enough for you, a std::unique_ptr almost certainly is, too.
+
+std::unique_ptr embodies exclusive ownership semantics. A non-null std::unique_ptr always owns what it points to. Moving a std::unique_ptr transfers ownership from the source pointer to the destination pointer. (The source pointer is set to null.) Copying a std::unique_ptr isn’t allowed, because if you could copy a std::unique_ptr, you’d end up with two std::unique_ptrs to the same resource, each thinking it owned (and should therefore destroy) that resource. std::unique_ptr is thus a move-only type. Upon destruction, a non-null std::unique_ptr destroys its resource. By default, resource destruction is accomplished by applying delete to the raw pointer inside the std::unique_ptr.
+
+By default, destruction would take place via delete, but, during construction, std::unique_ptr objects can be configured to use custom deleters:
+
+```cpp
+auto delInvmt = [](Investment* pInvestment) { // custom deleter
+ makeLogEntry(pInvestment); // (a lambda expression)
+ delete pInvestment; 
+};
+template<typename... Ts> // revised
+std::unique_ptr<Investment, decltype(delInvmt)> // return type
+makeInvestment(Ts&&... params)
+{
+ std::unique_ptr<Investment, decltype(delInvmt)> // ptr to be
+ pInv(nullptr, delInvmt); // returned
+
+ if ( /* a Stock object should be created */ )
+ {
+ pInv.reset(new Stock(std::forward<Ts>(params)...));
+ }
+ else if ( /* a Bond object should be created */ )
+ {
+ pInv.reset(new Bond(std::forward<Ts>(params)...));
+ }
+ else if ( /* a RealEstate object should be created */ )
+ {
+ pInv.reset(new RealEstate(std::forward<Ts>(params)...));
+ }
+ return pInv;
+}
+```
+
+- delInvmt is the custom deleter for the object returned from makeInvestment. All custom deletion functions accept a raw pointer to the object to be destroyed, then do what is necessary to destroy that object. In this case, the action is to call makeLogEntry and then apply delete. Using a lambda expression to create delInvmt is convenient, but, as we’ll see shortly, it’s also more efficient than writing a conventional function.
+- When a custom deleter is to be used, its type must be specified as the second type argument to std::unique_ptr. In this case, that’s the type of delInvmt, and that’s why the return type of makeInvestment is std::unique_ptr<Investment, decltype(delInvmt)>. (For information about decltype, see Item 3.)
+- The basic strategy of makeInvestment is to create a null std::unique_ptr, make it point to an object of the appropriate type, and then return it. To associate the custom deleter delInvmt with pInv, we pass that as its second constructor argument.
+- Attempting to assign a raw pointer (e.g., from new) to a std::unique_ptr won’t compile, because it would constitute an implicit conversion from a raw to a smart pointer. Such implicit conversions can be problematic, so C++11’s smartpointers prohibit them. That’s why reset is used to have pInv assume ownership of the object created via new.
+- With each use of new, we use std::forward to perfect-forward the arguments passed to makeInvestment (see Item 25). This makes all the information provided by callers available to the constructors of the objects being created.
+- The custom deleter takes a parameter of type Investment*. Regardless of the actual type of object created inside makeInvestment (i.e., Stock, Bond, or Real Estate), it will ultimately be deleted inside the lambda expression as an Investment* object. This means we’ll be deleting a derived class object via a base class pointer. For that to work, the base class—Investment—must have a virtual destructor:
+```cpp
+class Investment {
+public:
+ … // essential
+ virtual ~Investment(); // design
+ … // component!
+};```
+
+In C++14, the existence of function return type deduction (see Item 3) means that makeInvestment could be implemented in this simpler and more encapsulated fashion:
+
+```cpp
+template<typename... Ts>
+auto makeInvestment(Ts&&... params) // C++14
+{
+ auto delInvmt = [](Investment* pInvestment) // this is now
+ { // this is now inside
+ makeLogEntry(pInvestment); // make-Investment
+ delete pInvestment;
+ };
+ std::unique_ptr<Investment, decltype(delInvmt)> // as
+ pInv(nullptr, delInvmt); // before
+ if ( … ) // as before
+ {
+ pInv.reset(new Stock(std::forward<Ts>(params)...));
+ }
+ else if ( … ) // as before
+ {
+ pInv.reset(new Bond(std::forward<Ts>(params)...));
+ }
+ else if ( … ) // as before
+ {
+ pInv.reset(new RealEstate(std::forward<Ts>(params)...));
+ }
+ return pInv; // as before
+}
+```
+
+When using the default deleter (i.e., delete), you can reasonably assume that std::unique_ptr objects are the same size as raw pointers. When custom deleters enter the picture, this may no longer be the case. Deleters that are function pointers generally cause the size of a std::unique_ptr to grow from one word to two. For deleters that are function objects, the change in size depends on how much state is stored in the function object. Stateless function objects (e.g., from lambda expressions with no captures) incur no size penalty, and this means that when a custom deleter can be implemented as either a function or a captureless lambda expression, the lambda is preferable
+
+std::unique_ptr comes in two forms, one for individual objects (std::unique_ptr<T>) and one for arrays (std::unique_ptr<T[]>). As a result, there’s never any ambiguity about what kind of entity a std::unique_ptr points to. The std::unique_ptr API is designed to match the form you’re using. For example, there’s no indexing operator (operator[]) for the single-object form, while the array form lacks dereferencing operators (operator* and operator->).
+
+std::unique_ptr is the C++11 way to express exclusive ownership, but one of its most attractive features is that it easily and efficiently converts to a std::shared_ptr:
+```cpp
+std::shared_ptr<Investment> sp = // converts std::unique_ptr
+ makeInvestment( arguments ); // to std::shared_ptr
+ ```
+This is a key part of why std::unique_ptr is so well suited as a factory function return type.
+
+### Things to Remember:
+- std::unique_ptr is a small, fast, move-only smart pointer for managing resources with exclusive-ownership semantics.
+- By default, resource destruction takes place via delete, but custom deleters can be specified. Stateful deleters and function pointers as deleters increase the size of std::unique_ptr objects.
+- Converting a std::unique_ptr to a std::shared_ptr is easy.
+
