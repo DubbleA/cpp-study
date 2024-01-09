@@ -70,3 +70,63 @@ public:
     }
 };
 ```
+
+## 49. Group Anagrams
+
+Notes: make unordered map where key is sorted string, -> arr of strings
+
+```cpp
+// O(N * k log k) Time Complexity
+// O(N * k) space complexity
+
+class Solution {
+public:
+    vector<vector<string>> groupAnagrams(vector<string>& strs) {
+        //The space complexity of the unordered_map is O(n * k), as it stores each string along with the sorted anagram key.
+        unordered_map<string, vector<string>> m; // map anagram -> strings of anagram
+
+        for(const auto& str : strs){ // O(N) for n strs
+            string anagram = str; 
+            // sorting string is O(k log k), k is the length of str string. 
+            sort(anagram.begin(), anagram.end()); 
+            m[anagram].push_back(str); // O(1) avg
+        }
+        vector<vector<string>> result;
+        for(const auto& [key, vec] : m){
+            result.push_back(vec);
+        }
+        return result;
+    }
+};
+```
+
+## 347. Top K Frequent Elements
+
+Notes: unordered map to track num frequency, and pq to sort nums by freq
+
+```cpp
+// O(n log n) Time Complexity
+// O(N) Space
+ 
+class Solution {
+public:
+    vector<int> topKFrequent(vector<int>& nums, int k) {
+        unordered_map<int, int> m; // maps num -> freq // O(N) space
+        for(const auto& num: nums) // O(N)
+            m[num]++;
+        
+        priority_queue<pair<int, int>> pq; // O(N) space
+        
+        for(const auto& [num, freq] : m){ // O(n log n)
+            pq.push({freq, num});
+        }
+
+        vector<int> result; // O(k) space
+        while(k--){ // O (k log n)
+            auto [freq, num] = pq.top(); pq.pop();
+            result.push_back(num);
+        }
+        return result;
+    }
+};
+```
