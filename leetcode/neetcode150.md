@@ -161,3 +161,95 @@ public:
     }
 };
 ```
+
+## 36. Valid Sudoku
+
+Notes: unordered_map<int, unordered_set> to map index value from 0-8 of row, col, and "box" (row/3*3) + (col/3) for duplicates
+
+```cpp
+// O(N^2) Time Complexity
+// O(N^2) Space Complexity
+
+class Solution {
+public:
+    bool isValidSudoku(vector<vector<char>>& board) {
+        unordered_map<int, unordered_set<char>> rows, cols, boxes; 
+        //maps index to set , gives us O(N^2) space bc we have a hashmap of a hashset. 
+        
+        for(int r = 0; r < 9; ++r){
+            for(int c = 0; c < 9; ++c){ //double for loop
+                char val = board[r][c];
+                if(val == '.')
+                    continue;
+                
+                //check row by index
+                if(rows[r].find(val) != rows[r].end()){
+                    return false;
+                }
+                rows[r].insert(val);
+
+                //check col by index
+                if(cols[c].find(val) != cols[c].end()){
+                    return false;
+                }
+                cols[c].insert(val);
+
+                //check the box by indicies
+                int boxRow = (r / 3) * 3; // should be 0,3,6 
+                int boxCol = c / 3; // should be 0,1,2
+                
+                //now we created boxes 0-8, separated by row
+                int boxIndex = boxRow + boxCol;  
+                if(boxes[boxIndex].find(val) != boxes[boxIndex].end()){
+                    return false;
+                }
+                boxes[boxIndex].insert(val);
+            }
+        }
+        return true; // no duplicates found
+    }
+};
+```
+
+##
+
+Notes: encode using string length + "#" into single concatanated string, and decode once char == "#" and str = s.substr(j + 1, stoi(s.substr(i, j - i)));
+
+```cpp
+class Codec {
+public:
+  
+
+// O(N) Time
+// O(1) Space 
+    
+    // Encodes a list of strings to a single string.
+    string encode(vector<string>& strs) {
+        string res = "";
+        for (int i = 0; i<strs.size(); i++){
+            //encode using string length + hashtag concatanation
+            res += to_string(strs[i].length()) + "#" + strs[i];
+        }
+        return res;
+    }
+
+    // Decodes a single string to a list of strings.
+    vector<string> decode(string s) {
+        vector<string> result;
+        
+        int i = 0;
+        while (i < s.size()) {
+            int j = i;
+            while (s[j] != '#') {
+                j++;
+            }
+            int length = stoi(s.substr(i, j - i));
+            string str = s.substr(j + 1, length);
+            result.push_back(str);
+            i = j + 1 + length;
+        }
+        
+        return result;
+    }
+};
+```
