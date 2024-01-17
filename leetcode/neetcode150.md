@@ -211,7 +211,7 @@ public:
 };
 ```
 
-##
+## 271. Encode and Decode Strings
 
 Notes: encode using string length + "#" into single concatanated string, and decode once char == "#" and str = s.substr(j + 1, stoi(s.substr(i, j - i)));
 
@@ -250,6 +250,73 @@ public:
         }
         
         return result;
+    }
+};
+```
+
+## 128. Longest Consecutive Sequence
+
+Notes: set, find bottom of sequence (s.find(curr-1)) and then while loop curr + 1 to find length of max sequence
+
+```cpp
+// O(N) Time
+// O(N) Space
+/*
+    Because the while loop is reached only when currentNum marks
+    the beginning of a sequence (i.e. currentNum-1 is not present in
+    set), the while loop can only run for n iterations throughout the
+    entire runtime of the algorithm. This means that despite looking like
+    O(n⋅n) complexity, the nested loops actually run in O(n+n)=O(n)
+*/
+
+class Solution {
+public:
+    int longestConsecutive(vector<int>& nums) {
+        unordered_set<int> set (nums.begin(), nums.end());
+        int result = 0;
+
+        for(int i = 0; i < nums.size(); ++i){
+            int curr = nums[i];
+            //we found the bottom of the sequence
+            if(set.find(curr - 1) == set.end()){
+                int currLength = 1;
+                while(set.find(curr + 1) != set.end()){
+                    currLength++;
+                    set.erase(curr);
+                    curr++;
+                }
+                result = max(result, currLength);
+            }
+        }
+        return result;
+    }
+};
+```
+
+# Two Pointers
+
+## 125. Valid Palindrome
+
+Notes: isalnum(c), tolower(c), left = 0, right = s.size() - 1; two pointers
+
+```cpp
+// O(N) Time
+// O(1) Space
+
+class Solution {
+public:
+    bool isPalindrome(string str) {
+        string s;
+        for(const auto& c : str)
+            if(isalnum(c)) s += tolower(c);
+        
+        int left = 0, right = s.size() - 1;
+        while(left < right){
+            if(s[left] != s[right]) return false;
+            left++;
+            right--;
+        }
+        return true;
     }
 };
 ```
