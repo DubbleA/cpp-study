@@ -352,7 +352,7 @@ public:
 
 ## 15. 3Sum
 
-Notes: for i=0, n - 2; int j = i + 1, k = n - 1; two pointers j < k: if sum is 0: trips.pushback and skip duplicates for j & k (i.e. while (j < k && nums[j] == nums[j + 1]) j++;) j++; k--;. else if sum > 0: k--, else j++;
+Notes: for i=0, n - 2; int j = i + 1, k = n - 1 (and skip duplicates for i); two pointers j < k: if sum is 0: trips.pushback and skip duplicates for j & k (i.e. while (j < k && nums[j] == nums[j + 1]) j++;) j++; k--;. else if sum > 0: k--, else j++;
 
 ```cpp
 // O(N^2) Time
