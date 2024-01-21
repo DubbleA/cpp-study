@@ -390,3 +390,30 @@ public:
     }
 };
 ```
+
+## 11. Container With Most Water
+
+Notes: maxArea = max(min(height[left], height[right]) * (right - left), maxArea);
+
+```cpp
+// O(N) Time
+// O(1) Space
+
+class Solution {
+public:
+    int maxArea(vector<int>& height) {
+        int left = 0, right = height.size() - 1, maxArea = 0;
+
+        while(left < right){
+            maxArea = max(min(height[left], height[right]) * (right - left), maxArea);
+            if(height[left] <  height[right]){
+                left++;
+            }
+            else{
+                right--;
+            }
+        }
+        return maxArea;
+    }
+};
+```
