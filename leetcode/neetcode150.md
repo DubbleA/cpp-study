@@ -422,6 +422,32 @@ public:
 
 Notes: while (i < j) : if(maxLeft <= maxRight) maxLeft = max(maxLeft, height[++i]), result += maxLeft - height[i]; inverse for else. 
 
+```cpp
+// O(N) Time
+// O(1) Space
+
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int i = 0, j = height.size() - 1;
+        int maxLeft = height[i], maxRight = height[j];
+        int result = 0;
+
+        while(i < j){
+            if(maxLeft <= maxRight){
+                maxLeft = max(maxLeft, height[++i]);
+                result += maxLeft - height[i];
+            }
+            else{
+                maxRight = max(maxRight, height[--j]);
+                result += maxRight - height[j];
+            }
+        }
+        return result;
+    }
+};
+```
+
 # Sliding Window
 
 ## 121. Best Time to Buy and Sell Stock
