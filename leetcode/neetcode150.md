@@ -417,3 +417,31 @@ public:
     }
 };
 ```
+
+## 42. Trapping Rain Water
+
+Notes: while (i < j) : if(maxLeft <= maxRight) maxLeft = max(maxLeft, height[++i]), result += maxLeft - height[i]; inverse for else. 
+
+# Sliding Window
+
+## 121. Best Time to Buy and Sell Stock
+
+Notes: profit = max(profit, prices[i] - curMin);
+
+```cpp
+// O(N) Time
+// O(1) Space
+
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int profit = 0, curMin = INT_MAX;
+
+        for(int i = 0; i < prices.size(); ++i){
+            curMin = min(curMin, prices[i]);
+            profit = max(profit, prices[i] - curMin);
+        }
+        return profit;
+    }
+};
+```
