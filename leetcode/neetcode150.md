@@ -502,7 +502,7 @@ public:
 };
 ```
 
-## 
+## 424. Longest Repeating Character Replacement
 
 Notes: unordered map char->freq to keep track of frequency of characters. sliding window with maxFreq (maxFreq, count[s[right]]) to keep track of max recurring letter. if right - left + 1 - maxFreq > k, move left window. outside of if stmt update longest length.
 
