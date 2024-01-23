@@ -471,3 +471,33 @@ public:
     }
 };
 ```
+
+## 3. Longest Substring Without Repeating Characters
+
+Notes: unordered set to keep track of seen chars. if new char then longest = right - left. else erase s[left] & increment left.
+
+```cpp
+// O(N) Time
+// O(N) Space
+
+class Solution {
+public:
+    int lengthOfLongestSubstring(string s) {
+        unordered_set<char> set;
+        int longest = 0, left = 0, right = 0;
+
+        while(right < s.size()){
+            if(set.find(s[right]) == set.end()){
+                set.insert(s[right]);
+                right++;
+                longest = max(longest, right - left);
+            }
+            else{ //process duplicate and slide window
+                set.erase(s[left]);
+                left++;
+            }
+        }
+        return longest;
+    }
+};
+```

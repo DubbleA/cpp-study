@@ -118,6 +118,80 @@ public:
 };
 ```
 
+### Question 3: 2976. Minimum Cost to Convert String I
+
+explanation video: 
+https://www.youtube.com/watch?v=oP4iBpYZUiI&t=241s
+
+```cpp
+class Solution {
+public:
+    long long minimumCost(string source, string target, vector<char>& original, vector<char>& changed, vector<int>& cost) {
+        // char -> char -> cost
+        
+        unordered_map<char, unordered_map<char, int>> graph;
+        for (int i = 0; i < original.size(); ++i) {
+            if (graph[original[i]].find(changed[i]) == graph[original[i]].end()) {
+                graph[original[i]][changed[i]] = cost[i];
+            } else {
+                graph[original[i]][changed[i]] = min(cost[i], graph[original[i]][changed[i]]);
+            }
+        }
+
+        long long total = 0;
+
+        // memoize the shortest path
+        unordered_map<char, unordered_map<char, int>> memo;
+
+        for (int i = 0; i < source.length(); ++i) {
+            if (source[i] != target[i]) {
+                int result = findPath(source[i], target[i], graph, memo);
+                if (result == -1) return -1; //path doesnt exist
+                total += result;
+            }
+        }
+
+        return total;
+    }
+
+    long long findPath(char source, char target, unordered_map<char, unordered_map<char, int>>& graph, unordered_map<char, unordered_map<char, int>>& memo) {
+        if (memo[source].find(target) != memo[source].end()) {
+            return memo[source][target];
+        }
+
+        priority_queue<pair<int, char>, vector<pair<int, char>>, greater<pair<int, char>>> pq;
+        pq.push({0, source});
+        unordered_map<char, int> costs;
+        costs[source] = 0;
+
+        while (!pq.empty()) {
+            auto [cost, letter] = pq.top();
+            pq.pop();
+
+            if (letter == target) {
+                memo[source][target] = cost;
+                return cost;
+            }
+
+            if (graph.find(letter) != graph.end()) {
+                for (const auto& edge : graph[letter]) {
+                    char nextLetter = edge.first;
+                    int nextCost = cost + edge.second;
+
+                    if (!costs.count(nextLetter) || nextCost < costs[nextLetter]) {
+                        costs[nextLetter] = nextCost;
+                        pq.push({nextCost, nextLetter});
+                    }
+                }
+            }
+        }
+
+        memo[source][target] = -1; // No path found
+        return -1;
+    }
+};
+```
+
 ## Biweekly Contest 121
 
 ### Question 1: 10031. Smallest Missing Integer Greater Than Sequential Prefix Sum
