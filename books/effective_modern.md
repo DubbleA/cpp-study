@@ -1150,3 +1150,35 @@ This is a key part of why std::unique_ptr is so well suited as a factory functio
 - By default, resource destruction takes place via delete, but custom deleters can be specified. Stateful deleters and function pointers as deleters increase the size of std::unique_ptr objects.
 - Converting a std::unique_ptr to a std::shared_ptr is easy.
 
+## Item 19: Use std::shared_ptr for shared-ownership resource management. 
+
+An object accessed via std::shared_ptrs has its lifetime managed by those pointers through shared ownership. No specific std::shared_ptr owns the object. Instead, all std::shared_ptrs pointing to it collaborate to ensure its destruction at the point where it’s no longer needed. When the last std::shared_ptr pointing to an object stops pointing there (e.g., because the std::shared_ptr is destroyed or made to point to a different object), that std::shared_ptr destroys the object it points to. As with garbage collection, clients need not concern themselves with managing the lifetime of pointed-to objects, but as with destructors, the timing of the objects’ destruc‐
+tion is deterministic. 
+
+A std::shared_ptr can tell whether it’s the last one pointing to a resource by consulting the resource’s `reference count`, a value associated with the resource that keeps track of how many std::shared_ptrs point to it. std::shared_ptr constructors increment this count (usually), std::shared_ptr destructors decrement it, and copy assignment operators do both.
+
+The existence of the reference count has performance implications:
+- `std::shared_ptrs are twice the size of a raw pointer`, because they internally contain a raw pointer to the resource as well as a raw pointer to the resource's reference count. 
+- `Memory for the reference count must be dynamically allocated.`  Item 21 explains that the cost of the dynamic allocation is avoided when the std::shared_ptr is created by std::make_shared, but there are situations where std::make_shared can’t be used. Either way, the reference count is stored as dynamically allocated data.
+- `Increments and decrements of the reference count must be atomic`, because there can be simultaneaous readers and writers in different threads. Atomic operations are typically slower than non-atomic operations, so even though reference counts are usually only a word in size, you should assume that reading and writing them is comparatively costly.
+
+a std::shared_ptr object contains a pointer to the reference count for the object it points to. That’s true, but it’s a bit misleading, because the reference count is part of a larger data structure known as the control block. There’s a control block for each object managed by std::shared_ptrs. The control block contains, in addition to the reference count, a copy of the custom deleter, if one has been specified. If a custom allocator was specified, the control block contains a copy of that, too. The control block may also contain additional data, including, as Item 21 explains, a secondary reference count known as the weak count, but we’ll ignore such data in this Item.
+
+An object’s control block is set up by the function creating the first std::shared_ptr to the object. At least that’s what’s supposed to happen. In general, it’s impossible for a function creating a std::shared_ptr to an object to know whether some other std::shared_ptr already points to that object, so the following rules for control block creation are used:
+
+- `std::make_shared (see Item 21) always creates a control block`. It manufac‐
+tures a new object to point to, so there is certainly no control block for that object at the time std::make_shared is called.
+-  `A control block is created when a std::shared_ptr is constructed from a
+unique-ownership pointer (i.e., a std::unique_ptr or std::auto_ptr).` Unique-ownership pointers don’t use control blocks, so there should be no con‐
+trol block for the pointed-to object. 
+- `When a std::shared_ptr constructor is called with a raw pointer, it creates acontrol block` If you wanted to create a std::shared_ptr from an object that already had a control block, you’d presumably pass a std::shared_ptr or a std::weak_ptr (see Item 20) as a constructor argument, not a raw pointer
+
+A consequence of these rules is that constructing more than one std::shared_ptr from a single raw pointer gives you a complimentary ride on the particle accelerator of undefined behavior, because the pointed-to object will have multiple control blocks.
+
+### Things to Remember
+- std::shared_ptrs offer convenience approaching that of garbage collection
+for the shared lifetime management of arbitrary resources.
+- Compared to std::unique_ptr, std::shared_ptr objects are typically
+twice as big, incur overhead for control blocks, and require atomic reference count manipulations.
+- Default resource destruction is via delete, but custom deleters are supported. The type of the deleter has no effect on the type of the std::shared_ptr.
+- Avoid creating std::shared_ptrs from variables of raw pointer type.
