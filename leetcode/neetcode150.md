@@ -501,3 +501,38 @@ public:
     }
 };
 ```
+
+## 
+
+Notes: unordered map char->freq to keep track of frequency of characters. sliding window with maxFreq (maxFreq, count[s[right]]) to keep track of max recurring letter. if right - left + 1 - maxFreq > k, move left window. outside of if stmt update longest length.
+
+```cpp
+// O(N) Time
+// O(N) Space
+
+class Solution {
+public:
+    int characterReplacement(string s, int k) {
+        int left = 0, right = 0, maxFreq = 0, longest = 0;
+        unordered_map<char, int> count; // char -> freq
+
+        while(right < s.size()){
+            count[s[right]]++;
+            maxFreq = max(maxFreq, count[s[right]]);
+            
+            // Check if the current window is valid
+            if(right - left + 1 - maxFreq > k){
+                // If the window is not valid, move the left pointer
+                count[s[left]]--;
+                left++;
+            }
+
+            // Update the longest length after the check
+            longest = max(longest, right - left + 1);
+            right++;
+        }
+
+        return longest;
+    }
+};
+```
