@@ -1182,3 +1182,28 @@ for the shared lifetime management of arbitrary resources.
 twice as big, incur overhead for control blocks, and require atomic reference count manipulations.
 - Default resource destruction is via delete, but custom deleters are supported. The type of the deleter has no effect on the type of the std::shared_ptr.
 - Avoid creating std::shared_ptrs from variables of raw pointer type.
+
+## Item 20: Use std::weak_ptr for std::shared_ptrlike pointers that can dangle.
+
+You may be wondering how a std::weak_ptr could be useful. You’ll probably wonder even more when you examine the std::weak_ptr API. It looks anything but
+smart. std::weak_ptrs can’t be dereferenced, nor can they be tested for nullness. That’s because std::weak_ptr isn’t a standalone smart pointer. It’s an augmentation of std::shared_ptr. The relationship begins at birth. std::weak_ptrs are typically created from std::shared_ptrs. They point to the same place as the std::shared_ptrs initializing them, but they don’t affect the reference count of the object they point to.
+
+As a final example of std::weak_ptr’s utility, consider a data structure with objects A, B, and C in it, where A and C share ownership of B and therefore hold
+std::shared_ptrs to it:
+
+A (shared_ptr) -> B (shared_ptr) -> C
+
+Suppose it’d be useful to also have a pointer from B back to A. What kind of pointer should this be?
+
+There are three choices:
+- A raw pointer. With this approach, if A is destroyed, but C continues to point to B, B will contain a pointer to A that will dangle. B won’t be able to detect that, so B may inadvertently dereference the dangling pointer. That would yield undefined behavior.
+- A std::shared_ptr. In this design, A and B contain std::shared_ptrs to each other. The resulting std::shared_ptr cycle (A points to B and B points to A) will prevent both A and B from being destroyed. 
+- A std::weak_ptr. This avoids both problems above. If A is destroyed, B’s pointer back to it will dangle, but B will be able to detect that. Furthermore,
+though A and B will point to one another, B’s pointer won’t affect A’s reference count, hence can’t keep A from being destroyed when std::shared_ptrs no
+longer point to it.
+
+However, it’s worth noting that the need to employ std::weak_ptrs to break prospective cycles of std::shared_ptrs is not terribly common. In strictly hierarchal data structures such as trees, child nodes are typically owned only by their parents. When a parent node is destroyed, its child nodes should be destroyed, too. Links from parents to children are thus generally best represented by std::unique_ptrs.
+
+### Things To Remember 
+- Use std::weak_ptr for std::shared_ptr-like pointers that can dangle.
+- Potential use cases for std::weak_ptr include caching, observer lists, and the prevention of std::shared_ptr cycles.

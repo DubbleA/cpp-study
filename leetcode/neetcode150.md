@@ -536,3 +536,35 @@ public:
     }
 };
 ```
+
+## 567. Permutation in String
+
+Notes: char freq map for s1 and s2. while right < s2 size, increase char freq in s2map. if right - left + 1 == s1 size (window is size of s1) check if the maps are equal. also check if --s2Map[s2[left]] == 0 then erase s2 left from the s2map.
+
+```cpp
+// O(n + m * k) Time, where n is the length of s1, m is the length of s2, and k is the size of the character set
+// O(k) Space, where k is the number of unique characters in s1. since k is small (english letters) it can be argued that it is O(1)
+
+
+class Solution {
+public:
+    bool checkInclusion(string s1, string s2) {
+        unordered_map<char, int> s1Map, s2Map; //char -> freq
+        for(const char& c: s1) s1Map[c]++; //O(N)
+        
+        int left = 0, right = 0;
+
+        while(right < s2.size()){
+            char c = s2[right];
+            s2Map[c]++;
+            if(right - left + 1 == s1.size()){
+                if(s1Map == s2Map) return true; //O(1) avg, O(k) worst case
+                if(--s2Map[s2[left]] == 0) s2Map.erase(s2[left]); //O(1) avg
+                left++;
+            }
+            right++;
+        }
+        return false;
+    }
+};
+```
