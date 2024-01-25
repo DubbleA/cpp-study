@@ -1,6 +1,5 @@
 # Arrays & Hashing
 
-
 ## 217. Contains Duplicate
 
 Notes: set to check if new elem is alr processed
@@ -541,8 +540,11 @@ public:
 Notes: char freq map for s1 and s2. while right < s2 size, increase char freq in s2map. if right - left + 1 == s1 size (window is size of s1) check if the maps are equal. also check if --s2Map[s2[left]] == 0 then erase s2 left from the s2map.
 
 ```cpp
-// O(n + m * k) Time, where n is the length of s1, m is the length of s2, and k is the size of the character set
-// O(k) Space, where k is the number of unique characters in s1. since k is small (english letters) it can be argued that it is O(1)
+// O(n + m * k) Time, where n is the length of s1, m is 
+// the length of s2, and k is the size of the character set
+
+// O(k) Space, where k is the number of unique characters in s1.
+// since k is small (english letters) it can be argued that it is O(1)
 
 
 class Solution {
