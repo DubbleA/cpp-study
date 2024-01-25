@@ -568,3 +568,60 @@ public:
     }
 };
 ```
+
+### 76. Minimum Window Substring
+
+Notes: sliding window. char freq of tMap, sMap. if tMap.find(c), increment sMap count. if sMap and tMap count of letter is equal increment validLetters. in nested while(validL == tMap.size()): if right - left < minLen, then start = left and update minLen. then check if s[left] in tMap and if its equal to count of tMap. if it is decrement valid letters. finally decremenent sMap[s[left]]. return "" or s.substr(start, len)
+
+```cpp
+// O(N + M) Time Complexity
+/*
+where N is the length of string s and M is the length of string t. The outer loop runs for each character of s, and the inner loop processes each character only once due to the two-pointer approach. Therefore, it's linear in the size of s
+*/
+
+// O(M) Space Complexity 
+
+/*
+where M is the length of string t, as we are storing counts of characters in tMap and sMap. The size of these maps will not exceed the number of unique characters in t, which is at most the length of t.
+*/
+
+class Solution {
+public:
+    string minWindow(string s, string t) {
+        int left = 0, right = 0, validLetters = 0, minLen = INT_MAX, start = 0;
+        unordered_map<char, int> sMap, tMap;
+        
+        // Build a frequency map for characters in t
+        for(char c : t) tMap[c]++;
+        
+        // Expand the window with right pointer
+        while(right < s.size()){
+            char c = s[right++];
+            
+            // Check if character is in t
+            if(tMap.find(c) != tMap.end()){
+                sMap[c]++; // Increment frequency in sMap
+                // If counts match, increment validLetters
+                if(sMap[c] == tMap[c]) validLetters++;
+            }
+
+            // Contract the window from the left and update result
+            while(validLetters == tMap.size()){
+                if(right - left < minLen){
+                    start = left;
+                    minLen = right - left;
+                }
+                char d = s[left++];
+                // Check if the character is in t
+                if(tMap.find(d) != tMap.end()){
+                    // Reduce validLetters count if a required char is removed
+                    if(sMap[d] == tMap[d]) validLetters--;
+                    sMap[d]--;
+                }
+            }
+        }
+        // Return the minimum length window or empty string if no valid window found
+        return minLen == INT_MAX ? "" : s.substr(start, minLen);
+    }
+};
+```
