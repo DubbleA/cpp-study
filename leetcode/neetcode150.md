@@ -261,13 +261,12 @@ Notes: set, find bottom of sequence (s.find(curr-1)) and then while loop curr + 
 ```cpp
 // O(N) Time
 // O(N) Space
-/*
-    Because the while loop is reached only when currentNum marks
-    the beginning of a sequence (i.e. currentNum-1 is not present in
-    set), the while loop can only run for n iterations throughout the
-    entire runtime of the algorithm. This means that despite looking like
-    O(n⋅n) complexity, the nested loops actually run in O(n+n)=O(n)
-*/
+// Because the while loop is reached only when currentNum marks
+// the beginning of a sequence (i.e. currentNum-1 is not present in
+// set), the while loop can only run for n iterations throughout the
+// entire runtime of the algorithm. This means that despite looking like
+// O(n⋅n) complexity, the nested loops actually run in O(n+n)=O(n)
+
 
 class Solution {
 public:
@@ -575,15 +574,11 @@ Notes: sliding window. char freq of tMap, sMap. if tMap.find(c), increment sMap 
 
 ```cpp
 // O(N + M) Time Complexity
-/*
-where N is the length of string s and M is the length of string t. The outer loop runs for each character of s, and the inner loop processes each character only once due to the two-pointer approach. Therefore, it's linear in the size of s
-*/
+// where N is the length of string s and M is the length of string t. The outer loop runs for each character of s, and the inner loop processes each character only once due to the two-pointer approach. Therefore, it's linear in the size of s
+
 
 // O(M) Space Complexity 
-
-/*
-where M is the length of string t, as we are storing counts of characters in tMap and sMap. The size of these maps will not exceed the number of unique characters in t, which is at most the length of t.
-*/
+// where M is the length of string t, as we are storing counts of characters in tMap and sMap. The size of these maps will not exceed the number of unique characters in t, which is at most the length of t.
 
 class Solution {
 public:
