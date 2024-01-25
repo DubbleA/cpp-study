@@ -574,11 +574,16 @@ Notes: sliding window. char freq of tMap, sMap. if tMap.find(c), increment sMap 
 
 ```cpp
 // O(N + M) Time Complexity
-// where N is the length of string s and M is the length of string t. The outer loop runs for each character of s, and the inner loop processes each character only once due to the two-pointer approach. Therefore, it's linear in the size of s
+// where N is the length of string s and M is the length of string t. 
+// The outer loop runs for each character of s, and the inner loop processes
+// each character only once due to the two-pointer approach. Therefore, 
+// it's linear in the size of s
 
 
 // O(M) Space Complexity 
-// where M is the length of string t, as we are storing counts of characters in tMap and sMap. The size of these maps will not exceed the number of unique characters in t, which is at most the length of t.
+// where M is the length of string t, as we are storing counts of 
+// characters in tMap and sMap. The size of these maps will not 
+// exceed the number of unique characters in t, which is at most the length of t.
 
 class Solution {
 public:
