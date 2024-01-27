@@ -627,3 +627,39 @@ public:
     }
 };
 ```
+
+## 239. Sliding Window Maximum
+
+Notes: deque<int> to store indicies of window. while(j < n.size()): pop smaller value(s) from dq (while(!empty && n[dq.back()] < n[right]) dq.pop_back()). add current index to dq and remove left value from index ((if left index > q index) dq.pop_front()). finally if right + 1 >= k add n[dq.front] to result vector and inc left; right. 
+
+```cpp
+// O(N) Time
+// O(k) Space
+
+class Solution {
+public:
+    vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+        vector<int> result;
+        int left = 0, right = 0;
+        //gonna store the index 
+        deque<int> dq; // O(k) space bc thats the max size of the deque
+        while(right < nums.size()){
+            //pop smaller value from q
+            //each elem can only be added to deque once
+            while(!dq.empty() && nums[dq.back()] < nums[right]) dq.pop_back();
+            dq.push_back(right);
+
+            //remove left value from index (if left index > q index)
+            if(left > dq.front()) dq.pop_front();
+
+            if(right + 1 >= k){
+                result.push_back(nums[dq.front()]);
+                left++;
+            }
+            right++;
+        }
+            
+        return result;
+    }
+};
+```
