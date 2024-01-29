@@ -474,3 +474,121 @@ public:
     }
 };
 ```
+
+## Weekly Contest 382
+
+### Question 1: 3019. Number of Changing Keys
+
+```cpp
+class Solution {
+public:
+    int countKeyChanges(string s) {
+        char prev = tolower(s[0]);
+        int result = 0;
+        int i = 1;
+        while(i < s.size()){
+            char curr = tolower(s[i]);
+            if(curr == prev){
+                ++i;
+            }
+            else{
+                prev = curr;
+                ++i;
+                ++result;
+            }
+        }
+        return result;
+    }
+};
+```
+
+### Question 2: 3020. Find the Maximum Number of Elements in Subset
+
+```cpp
+//Evaluate frequency of each items in nums
+
+//Then iterate over each items in the map and check for continuation of the 
+//sequence. While doing so set frequency to zero which even items freq 
+//we have checked as a part of the check.
+
+// O(NlogN) Time
+// O(N) Space
+
+class Solution {
+public:
+    int maximumLength(vector<int>& nums) {
+        long long ans = 0; 
+
+        //we have used map and not unordered map as we need to check 
+        //from the lower valued item to the higher value to check sequence.
+        map<int, int> freq;
+
+        for(auto n : nums) freq[n]++;
+        for(auto [key, val]: freq){
+            long long num = key, count = 0;
+            if (num == 1) {
+                count += freq[num]; 
+                freq[num] = 0;
+            }
+            while(num < INT_MAX && freq[num] > 0){
+                count += 2;
+                if(freq[num] == 1) break;
+                // set to zero, so that we do not check for this sequence again
+                freq[num] = 0;
+                num = num * num;
+            }
+            if(count % 2 == 0) count--;
+            ans = max(ans, count);
+        }
+        return ans;
+    }
+};
+```
+
+### Question 3: 3021. Alice and Bob Playing Flower Game
+
+explanation video: https://www.youtube.com/watch?v=2TkWaGBKzTI
+
+bob wins if even alice wins if odd:
+The code calculates the score in a flower game given the number of flowers picked by two players. It multiplies the number of flowers each player picked, then divides the product by 2 to determine the score.
+
+```cpp
+class Solution {
+public:
+    long long flowerGame(int n, int m) {
+        long long a=m;
+        long long b=n;
+        long long s=a*b;
+        return s/2;
+    }
+};
+```
+
+### Question 4: 3022. Minimize OR of Remaining Elements Using Operations
+
+https://leetcode.com/problems/minimize-or-of-remaining-elements-using-operations/solutions/4638224/with-detailed-explanation-different-approach-o-n/
+
+```cpp
+class Solution {
+    public int minOrAfterOperations(int[] nums, int k) {
+        int ans=0;
+        int mask=0; // used for performing operation on prefix of bits
+        for(int j=30;j>=0;j--){ // builds answer bit by bit
+            mask=mask | (1<<j);// mask changes(10000.. -> 11000..->11100..->11110..->111111..)
+
+            int cosecutiveAnd=mask;
+            int mergeCount=0;// no. of merges required to make current bit 0
+            for(int i:nums){
+                cosecutiveAnd = cosecutiveAnd & i; 
+                if((cosecutiveAnd|ans)!=ans) // explained below
+                    mergeCount++; //while above condition is not achieved keep merging
+                else cosecutiveAnd=mask; // else reset cosecutiveAnd to mask(11111..0000...), no need to increase count
+            }
+
+            if(mergeCount>k)
+                ans|=(1<<j);// if(count is more than k, make set curent bit of 1, else it stays 0)
+        }
+        return ans;
+    }
+}
+```

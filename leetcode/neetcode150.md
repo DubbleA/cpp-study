@@ -663,3 +663,33 @@ public:
     }
 };
 ```
+
+# Stack
+
+## 20. Valid Parentheses
+
+Notes: Create a stack for open parenthesis. If the closing parenthesis doesnt equal the top of stack, its not valid. 
+
+```cpp
+// O(N) Time
+// O(N) Space
+
+class Solution {
+public:
+    bool isValid(string s) {
+        stack<char> stack; // O(N) space
+
+        for(auto c: s){
+            if(c == '(' or c == '[' or c == '{') stack.push(c);
+            else if(stack.empty()) return false;
+            else if(c == ')' && stack.top() != '(') return false;
+            else if(c == ']' && stack.top() != '[') return false;
+            else if(c == '}' && stack.top() != '{') return false;
+            else stack.pop();
+        
+        }
+        if(!stack.empty()) return false;
+        return true;
+    }
+};
+```
