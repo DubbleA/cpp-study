@@ -732,3 +732,35 @@ public:
 };
 ```
 
+## 150. Evaluate Reverse Polish Notation
+
+Notes: isOperator function to check if str is operator. stack<int>. if str in tokens isOperator pop first 2 off stack and push result onto stack. else push(stoi(str)) to stack. 
+
+```cpp
+// O(N) Time
+// O(N) Space
+
+class Solution {
+public:
+    bool isOperator(const string& c){
+        return (c == "+" or c == "-" or c == "*" or c == "/");
+    }
+    int evalRPN(vector<string>& tokens) {
+        stack<int> stack;
+        for(string& str: tokens){
+            if(isOperator(str)){
+                auto second = stack.top(); stack.pop();
+                auto first = stack.top(); stack.pop();
+                if(str == "+") stack.push(first + second);
+                else if(str == "-") stack.push(first - second);
+                else if(str == "/") stack.push(first / second);
+                else if(str == "*") stack.push(first * second);
+            }
+            else{
+                stack.push(stoi(str));
+            }
+        }
+        return stack.top();
+    }
+};
+```
