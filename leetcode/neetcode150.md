@@ -693,3 +693,42 @@ public:
     }
 };
 ```
+
+## 155. Min Stack
+
+Notes: stack<pair<int, int>> stack; //val, minVal at time. when u push if stack empty: push{x, x} else push x, min(x, cMin)
+
+```cpp
+//O(1) Operation Time
+//O(N) Space
+
+class MinStack {
+public:
+    stack<pair<int, int>> stack; //val, minVal at time
+    MinStack() {
+        
+    }
+    
+    void push(int val) {
+        if(stack.empty()){
+            stack.push({val, val});
+            return;
+        }
+        int currentMin = stack.top().second;
+        stack.push({val, min(currentMin, val)});
+    }
+    
+    void pop() {
+        stack.pop();
+    }
+    
+    int top() {
+        return stack.top().first;
+    }
+    
+    int getMin() {
+        return stack.top().second;
+    }
+};
+```
+
