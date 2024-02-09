@@ -764,3 +764,40 @@ public:
     }
 };
 ```
+
+## 22. Generate Parentheses
+
+Notes: backtrack. if openN < n: backtrack(n, openN + 1, closedN, curr + "(", res), if closedN < openN : add ")" paren
+
+```cpp
+// O( 4^n / sqrt(n)) Time 
+// the total number of valid parentheses strings ^ (Catalan Number of possible combinations)
+// O(N) space 
+//The space complexity of a recursive call depends on the maximum depth of the recursive call stack, 
+//which is 2n. As each recursive call either adds a left parenthesis or a right parenthesis, 
+//and the total number of parentheses is 2n. Therefore, at most O(n) levels of recursion
+
+class Solution {
+public:
+    vector<string> generateParenthesis(int n) {
+        vector<string> res;
+        backtrack(n, 0, 0, "", res);
+        return res;
+    }
+    void backtrack(int n, int openN, int closedN, string curr, vector<string>& res){
+        if(curr.length() == n * 2) {
+            res.push_back(curr);
+            return;
+        }
+        
+        if(openN < n) {
+            backtrack(n, openN + 1, closedN, curr + "(", res);
+        }
+        
+        if(closedN < openN) {
+            backtrack(n, openN, closedN + 1,curr + ")", res);
+        }
+    }
+    
+};
+```
