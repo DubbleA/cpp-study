@@ -801,3 +801,44 @@ public:
     
 };
 ```
+
+## 739. Daily Temperatures
+
+Notes: while(!stack.empty() && temperatures[stack.top()] < currentTemp){ result[stack.top()] = i - stack.top(); stack.pop(); }
+
+```cpp
+// O(N) Time Complexity
+
+//At first glance, it may look like the time complexity of this algorithm should be O(N^2), 
+// because there is a nested while loop inside the for loop. However, each element 
+//can only be added to the stack once, which means the stack is limited to N pops. 
+//Every iteration of the while loop uses 1 pop, which means the while loop will not 
+//iterate more than N times in total, across all iterations of the for loop.
+
+// O(N) Space Complexity
+
+class Solution {
+public:
+    vector<int> dailyTemperatures(vector<int>& temperatures) {
+        stack<int> stack;
+        int n = temperatures.size();
+        vector<int> result (n, 0);
+
+        //Iterate through temperatures. At each index currTemp
+        for(int i = 0; i < n; ++i){
+            int currentTemp = temperatures[i];
+            //If the stack is not empty, that means there are previous 
+            //days for which we have not yet seen a warmer day.
+            //if the vales in the stack are colder than current temp, we need to update
+            //result array with the diff in index
+            while(!stack.empty() && temperatures[stack.top()] < currentTemp){
+                result[stack.top()] = i - stack.top(); stack.pop();
+            }
+            //push current day onto stack to be processed
+            stack.push(i);
+        }
+
+        return result;
+    }
+};
+```
