@@ -842,3 +842,41 @@ public:
     }
 };
 ```
+
+## 853. Car Fleet
+
+Notes: sort(pair<position[i], float(target - position[i]) / speed[i])> and put into stack, then while : if car cant catch up or no one in front, fleets++,
+else make sure that the cars have the slower time once merging to become a fleet
+
+```cpp
+// O(nlogn) Time because we have to sort it
+// O(N) Space
+
+class Solution {
+public:
+    int carFleet(int target, vector<int>& position, vector<int>& speed) {
+        vector<pair<int, float>> vec; // pos, target - position / speed (unit distance)
+        for(int i = 0; i < size(position); ++i) {
+            vec.push_back({position[i], float(target - position[i]) / speed[i]});
+        }
+        sort(vec.begin(), vec.end());
+        stack<pair<int, float>> s;
+        for(auto pair: vec) s.push(pair);
+        int fleets = 0;
+        while(!s.empty()){
+            auto [pos, time] = s.top(); s.pop();
+            if(s.empty() || time < s.top().second) { // If no cars in front or can't catch up
+                fleets++; // This car forms a new fleet.
+            } else {
+                // If the current car can catch up to the car in front, merge them into one fleet.
+                // we only increase `fleets` when we find a car that can't catch up.
+                // Adjust the time of the car in front if the current car takes longer to reach the target.
+                if(time > s.top().second) s.top().second = time; 
+                    // Update the time of the car in front to reflect this car joining the fleet, 
+                    // ensuring the fleet's speed is dictated by the slowest car.
+            }
+        }
+        return fleets;
+    }
+};
+```

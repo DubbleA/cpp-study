@@ -16,3 +16,47 @@ public:
 };
 ```
 
+## 2/15/24: 2971. Find Polygon With the Largest Perimeter
+
+```cpp
+class Solution {
+public:
+    long long largestPerimeter(vector<int>& nums) {
+        sort(nums.begin(), nums.end());
+        long long csum = 0;
+        for(auto& n: nums) csum += n;
+        int sides = 0;
+        for(int i = nums.size() - 1; i >= 0; --i){
+            if(nums[i] < csum - nums[i]){
+                sides = i + 1; 
+                break;
+            }
+            csum -= nums[i];
+        }
+        return sides >= 3 ? csum : -1;
+    }
+};
+```
+
+## 2/16/24: 1481. Least Number of Unique Integers after K Removals
+
+```cpp
+class Solution {
+public:
+    int findLeastNumOfUniqueInts(vector<int>& arr, int k) {
+        //k freq to pop?
+        unordered_map<int, int> m; //num -> freq
+        for(auto& n : arr) m[n]++;
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int,int>>> pq; //freq, num; 
+        for(auto [n , f] : m) pq.push({f, n});
+        while(k > 0){
+            auto [f, n] = pq.top();
+            if(k >= f){
+                pq.pop();
+            }
+            k -= f;
+        }
+        return pq.size();
+    }
+};
+```
