@@ -1,3 +1,415 @@
+## Biweekly Contest 124
+
+### Q1: 3038. Maximum Number of Operations With the Same Score I 
+
+```cpp
+class Solution {
+public:
+    int maxOperations(vector<int>& nums) {
+        if(nums.size() < 2) return 0;
+        int score = nums[0] + nums[1];
+        int operations = 1;
+        for(int i = 2; i < nums.size() - 1; i+=2){
+            if(nums[i] + nums[i+1] != score) return operations;
+            operations++;
+        }
+        return operations;
+    }
+};
+```
+
+### Q2: 3039. Apply Operations to Make String Empty
+
+```cpp
+class Solution {
+public:
+    string lastNonEmptyString(string s) {
+        //make char freq map, only highest freq chars live
+        unordered_map<char, int> m;
+        int maxCount = 0;
+        for(char c : s) {
+            m[c]++;
+            maxCount = max(maxCount, m[c]);
+        }
+        string result = "";
+        reverse(s.begin(), s.end());
+        for(char c : s){
+            if(m[c] == maxCount){
+                result += c;
+                m[c]--; //we dont wanna recount the char
+            }
+        }
+        reverse(result.begin(), result.end());
+        return result;
+
+    }
+};
+
+//TLE
+
+//make a set loop through in a while loop
+//maintain a stack of strings until its empty, return top of stack;
+// unordered_set<char> set;
+// stack<string> stack;
+// string str = s;
+// while(!s.empty()){
+//     string temp = "";
+//     for(char c : s){
+//         if(set.find(c) != set.end()){
+//             temp += c;
+//         }
+//         else{
+//             set.insert(c);
+//         }
+//     }
+//     set.clear();
+//     stack.push(temp);
+//     s = temp;
+// }
+// if(stack.size() <= 1) return str;
+// stack.pop();
+// return stack.top();
+// }
+```
+
+### Q3: 3040. Maximum Number of Operations With the Same Score II
+
+```cpp
+class Solution {
+public:
+    int maxOperations(vector<int>& nums) {
+        //score fixed after first one
+        //could do three passes to check each valid based on score
+        int n = nums.size();
+        vector<vector<int>>dp1(n+1,vector<int>(n+1,-1));
+        vector<vector<int>>dp2(n+1,vector<int>(n+1,-1));
+        vector<vector<int>>dp3(n+1,vector<int>(n+1,-1));
+
+        int scoreLeft = solve(2, n - 1, nums, nums[0] + nums[1], dp1); //check left
+        int scoreRight = solve(0, n - 3, nums, nums[n - 1] + nums[n - 2], dp2); //check right
+        int scoreBoth = solve(1, n - 2, nums, nums[0] + nums[n - 1], dp3); //check both
+        return max(max(scoreLeft,scoreRight), scoreBoth) + 1;
+    }
+    int solve (int left, int right, vector<int>& nums, int score, vector<vector<int>>& dp){
+        if(left >= right) return 0;
+        if(dp[left][right] != -1) return dp[left][right];
+        int a=0, b=0, c=0;
+        if(nums[left] + nums[left + 1] == score) a = 1 + solve(left+2,right,nums,score,dp);
+        if (nums[right] + nums[right - 1] == score) b = 1 + solve(left,right-2,nums,score,dp);
+        if (nums[left] + nums[right] == score) c = 1 + solve(left+1,right-1,nums,score,dp);
+
+        return dp[left][right] = max(a,max(b,c));
+    }   
+    
+};
+
+//almost works but we have to use dp
+// int maxOperations(vector<int>& nums) {
+//         //score fixed after first one
+//         //could do three passes to check each valid based on score
+//         int n = nums.size();
+//         int scoreLeft = solve(2, n - 1, nums, nums[0] + nums[1]); //check left
+//         int scoreRight = solve(0, n - 3, nums, nums[n - 1] + nums[n - 2]); //check right
+//         int scoreBoth = solve(1, n - 2, nums, nums[0] + nums[n - 1]); //check both
+//         return max(max(scoreLeft,scoreRight), scoreBoth);
+//     }
+//     int solve (int left, int right, vector<int>& nums, int score){
+//         int result = 1;
+//         while(left < right){
+//             if(nums[left] + nums[left + 1] == score) left +=2;
+//             else if (nums[right] + nums[right - 1] == score) right -=2;
+//             else if (nums[left] + nums[right] == score) {
+//                 left++;
+//                 right--;
+//             }
+//             else{
+//                 break;
+//             }
+//             result++;
+//         }
+//         return result;
+//     }
+```
+
+### Q4: 3041. Maximize Consecutive Elements in an Array After Modification
+
+```
+Solution 1: DP
+dp[a] is the maximum length of consecutive sequence ending with a.
+
+Iterates through each a in the sorted A.
+We can use a as a + 1, so we update dp[a + 1] = dp[a] + 1
+We can use a as a ieself, so we update dp[a] = dp[a - 1] + 1
+
+Finally we return the max length in dp values.
+
+Time O(sort) + O(n)
+Space O(sort) + O(n)
+```
+
+```cpp
+class Solution {
+public:
+    int maxSelectedElements(vector<int>& nums) {
+        sort(nums.begin(), nums.end());
+        unordered_map<int, int> dp;
+        int maxVal = 0;
+        for(auto& n : nums){
+            dp[n + 1] = max(dp[n + 1], 1 + dp[n]);
+            maxVal = max(dp[n+1], maxVal);
+            dp[n] = max(dp[n], 1 + dp[n - 1]);
+            maxVal = max(dp[n], maxVal);
+        }
+        return maxVal;
+    }
+};
+```
+
+## Weekly Contest 382
+
+### Question 1: 3019. Number of Changing Keys
+
+```cpp
+class Solution {
+public:
+    int countKeyChanges(string s) {
+        char prev = tolower(s[0]);
+        int result = 0;
+        int i = 1;
+        while(i < s.size()){
+            char curr = tolower(s[i]);
+            if(curr == prev){
+                ++i;
+            }
+            else{
+                prev = curr;
+                ++i;
+                ++result;
+            }
+        }
+        return result;
+    }
+};
+```
+
+### Question 2: 3020. Find the Maximum Number of Elements in Subset
+
+```cpp
+//Evaluate frequency of each items in nums
+
+//Then iterate over each items in the map and check for continuation of the 
+//sequence. While doing so set frequency to zero which even items freq 
+//we have checked as a part of the check.
+
+// O(NlogN) Time
+// O(N) Space
+
+class Solution {
+public:
+    int maximumLength(vector<int>& nums) {
+        long long ans = 0; 
+
+        //we have used map and not unordered map as we need to check 
+        //from the lower valued item to the higher value to check sequence.
+        map<int, int> freq;
+
+        for(auto n : nums) freq[n]++;
+        for(auto [key, val]: freq){
+            long long num = key, count = 0;
+            if (num == 1) {
+                count += freq[num]; 
+                freq[num] = 0;
+            }
+            while(num < INT_MAX && freq[num] > 0){
+                count += 2;
+                if(freq[num] == 1) break;
+                // set to zero, so that we do not check for this sequence again
+                freq[num] = 0;
+                num = num * num;
+            }
+            if(count % 2 == 0) count--;
+            ans = max(ans, count);
+        }
+        return ans;
+    }
+};
+```
+
+### Question 3: 3021. Alice and Bob Playing Flower Game
+
+explanation video: https://www.youtube.com/watch?v=2TkWaGBKzTI
+
+bob wins if even alice wins if odd:
+The code calculates the score in a flower game given the number of flowers picked by two players. It multiplies the number of flowers each player picked, then divides the product by 2 to determine the score.
+
+```cpp
+class Solution {
+public:
+    long long flowerGame(int n, int m) {
+        long long a=m;
+        long long b=n;
+        long long s=a*b;
+        return s/2;
+    }
+};
+```
+
+### Question 4: 3022. Minimize OR of Remaining Elements Using Operations
+
+https://leetcode.com/problems/minimize-or-of-remaining-elements-using-operations/solutions/4638224/with-detailed-explanation-different-approach-o-n/
+
+```cpp
+class Solution {
+    public int minOrAfterOperations(int[] nums, int k) {
+        int ans=0;
+        int mask=0; // used for performing operation on prefix of bits
+        for(int j=30;j>=0;j--){ // builds answer bit by bit
+            mask=mask | (1<<j);// mask changes(10000.. -> 11000..->11100..->11110..->111111..)
+
+            int cosecutiveAnd=mask;
+            int mergeCount=0;// no. of merges required to make current bit 0
+            for(int i:nums){
+                cosecutiveAnd = cosecutiveAnd & i; 
+                if((cosecutiveAnd|ans)!=ans) // explained below
+                    mergeCount++; //while above condition is not achieved keep merging
+                else cosecutiveAnd=mask; // else reset cosecutiveAnd to mask(11111..0000...), no need to increase count
+            }
+
+            if(mergeCount>k)
+                ans|=(1<<j);// if(count is more than k, make set curent bit of 1, else it stays 0)
+        }
+        return ans;
+    }
+}
+```
+
+## Biweekly Contest 121
+
+### Question 1: 10031. Smallest Missing Integer Greater Than Sequential Prefix Sum
+
+Return the smallest integer x missing from nums such that x is greater than or equal to the sum of the longest sequential prefix.
+
+```cpp
+class Solution {
+public:
+    int missingInteger(vector<int>& nums) {
+        int csum = nums[0];
+        for(int i = 1; i < nums.size(); ++i){
+            if(nums[i] - nums[i-1] != 1) break;
+            csum += nums[i];
+        }
+        unordered_set<int> s (nums.begin(), nums.end());
+        while(true){
+            if(s.find(csum) == s.end()) return csum;
+            csum++;
+        }
+        return -1;
+    }
+};
+```
+
+### Question 2: 2997. Minimum Number of Operations to Make Array XOR Equal to K
+
+explanation video: https://www.youtube.com/watch?v=Fhe2y3HgRvk
+
+"The code calculates the minimum operations needed to make each bit of the binary representation of integers in the array equal to the corresponding bit of the target 'k'. It iterates through each bit, checking if XOR operation is required for matching bits, updating the answer accordingly."
+
+3 line solution:
+```cpp
+// Count bits of XOR(A) ^ k
+int minOperations(vector<int>& A, int k) {
+    for (int a : A)
+        k ^= a;
+    return __builtin_popcount(k);
+}
+```
+
+### Question 3: 2998. Minimum Number of Operations to Make X and Y Equal
+
+```cpp
+// Approach: We need to check for 5 ways in our recursive calls :
+
+// 1. Just abs diff of x & y can be ans. So initialise res = abs(x - y)
+// 2. Check for multiple of 5 which is smaller than x. This can be 
+//achieved by just subtracting x%5 from x and divide x by 5. Here total 
+//operations = x%5 ( this many time decreament ) + 1 (for division by 5).
+// 3. Check for multiple of 5 which is larger than x. Adding (5 - x%5) 
+//to x and then divide x by 5. Here total operations = 5 - x%5 
+//(this many time increment ) + 1(for division by 5).
+// 4. 11 which is smaller than x. 
+// 5. 11 which is larger than x. 
+
+
+//O(N) Time & Space
+
+class Solution {
+public:
+    int minimumOperationsToMakeEqual(int x, int y) {
+        vector<int> dp (10011, -1);
+        return solve(x, y, dp);
+    }
+
+    int solve(int x, int y, vector<int>& dp){
+        if(x <= y) return y - x; //increment by 1 until theyre equal
+        if(dp[x] != -1) return dp[x]; //x has already been processed
+        int result = abs(x - y);
+        result = min(result, 1 + x%5 + solve(x/5, y, dp));
+        result = min(result, 1 + (5-x%5) + solve(x/5 + 1, y, dp));
+        result = min(result, 1 + x%11 + solve(x/11, y, dp));
+        result = min(result, 1 + (11-x%11) + solve(x/11 + 1, y, dp));
+        dp[x] = result;
+        return result;
+    }
+};
+```
+
+### Question 4: 2999. Count the Number of Powerful Integer
+
+https://leetcode.com/problems/count-the-number-of-powerful-integers/solutions/4518645/easy-fast-cpp-solution-0ms-100-beat-for-loop/
+
+```cpp
+class Solution {
+public:
+    long long numberOfPowerfulInt(long long start, long long finish, int limit, string s) {
+        string start_ = to_string(start-1), finish_ = to_string(finish);
+
+        return calculate(finish_, s, limit)-calculate(start_, s, limit);
+    }
+
+    long long calculate(string num, string s, int limit){
+        // it will find powerful number less than or equal num
+
+        if(num.length()<s.length())
+            return 0;
+
+        if(num.length()==s.length()){
+            return num >= s ? 1 : 0;
+        }
+
+        string s_ = num.substr(num.length() - s.length(), s.length());
+        //it is the suffix of num of length of s.length
+
+        long long ans = 0;
+        int n = num.length() - s.length();
+
+        for (int i = 0; i < n;i++){
+            if(limit<(num[i]-'0')){
+                ans+=(long)pow(limit+1, n-i);
+                return ans;
+                //if current digit is larger than limit then we can take all combinations with limit+1 (including 0) digits
+            }
+            ans += (long)(num[i] - '0') * (long)pow(limit + 1, n - 1 - i);
+            //0 to num[i]-1 have no problem with rest of digits [0->limit]
+            //for num[i] we need to check the rest of digits to ensure all combinations do not exceed the num
+
+        }
+        if(s_>=s)
+            ans++;
+        return ans;
+    }
+};
+```
+
 ## Weekly Contest 377 12/23/23
 
 ### Question 1: 2974. Minimum Number Game
@@ -348,247 +760,3 @@ public:
 ```
 
 
-## Biweekly Contest 121
-
-### Question 1: 10031. Smallest Missing Integer Greater Than Sequential Prefix Sum
-
-Return the smallest integer x missing from nums such that x is greater than or equal to the sum of the longest sequential prefix.
-
-```cpp
-class Solution {
-public:
-    int missingInteger(vector<int>& nums) {
-        int csum = nums[0];
-        for(int i = 1; i < nums.size(); ++i){
-            if(nums[i] - nums[i-1] != 1) break;
-            csum += nums[i];
-        }
-        unordered_set<int> s (nums.begin(), nums.end());
-        while(true){
-            if(s.find(csum) == s.end()) return csum;
-            csum++;
-        }
-        return -1;
-    }
-};
-```
-
-### Question 2: 2997. Minimum Number of Operations to Make Array XOR Equal to K
-
-explanation video: https://www.youtube.com/watch?v=Fhe2y3HgRvk
-
-"The code calculates the minimum operations needed to make each bit of the binary representation of integers in the array equal to the corresponding bit of the target 'k'. It iterates through each bit, checking if XOR operation is required for matching bits, updating the answer accordingly."
-
-3 line solution:
-```cpp
-// Count bits of XOR(A) ^ k
-int minOperations(vector<int>& A, int k) {
-    for (int a : A)
-        k ^= a;
-    return __builtin_popcount(k);
-}
-```
-
-### Question 3: 2998. Minimum Number of Operations to Make X and Y Equal
-
-```cpp
-// Approach: We need to check for 5 ways in our recursive calls :
-
-// 1. Just abs diff of x & y can be ans. So initialise res = abs(x - y)
-// 2. Check for multiple of 5 which is smaller than x. This can be 
-//achieved by just subtracting x%5 from x and divide x by 5. Here total 
-//operations = x%5 ( this many time decreament ) + 1 (for division by 5).
-// 3. Check for multiple of 5 which is larger than x. Adding (5 - x%5) 
-//to x and then divide x by 5. Here total operations = 5 - x%5 
-//(this many time increment ) + 1(for division by 5).
-// 4. 11 which is smaller than x. 
-// 5. 11 which is larger than x. 
-
-
-//O(N) Time & Space
-
-class Solution {
-public:
-    int minimumOperationsToMakeEqual(int x, int y) {
-        vector<int> dp (10011, -1);
-        return solve(x, y, dp);
-    }
-
-    int solve(int x, int y, vector<int>& dp){
-        if(x <= y) return y - x; //increment by 1 until theyre equal
-        if(dp[x] != -1) return dp[x]; //x has already been processed
-        int result = abs(x - y);
-        result = min(result, 1 + x%5 + solve(x/5, y, dp));
-        result = min(result, 1 + (5-x%5) + solve(x/5 + 1, y, dp));
-        result = min(result, 1 + x%11 + solve(x/11, y, dp));
-        result = min(result, 1 + (11-x%11) + solve(x/11 + 1, y, dp));
-        dp[x] = result;
-        return result;
-    }
-};
-```
-
-### Question 4: 2999. Count the Number of Powerful Integer
-
-https://leetcode.com/problems/count-the-number-of-powerful-integers/solutions/4518645/easy-fast-cpp-solution-0ms-100-beat-for-loop/
-
-```cpp
-class Solution {
-public:
-    long long numberOfPowerfulInt(long long start, long long finish, int limit, string s) {
-        string start_ = to_string(start-1), finish_ = to_string(finish);
-
-        return calculate(finish_, s, limit)-calculate(start_, s, limit);
-    }
-
-    long long calculate(string num, string s, int limit){
-        // it will find powerful number less than or equal num
-
-        if(num.length()<s.length())
-            return 0;
-
-        if(num.length()==s.length()){
-            return num >= s ? 1 : 0;
-        }
-
-        string s_ = num.substr(num.length() - s.length(), s.length());
-        //it is the suffix of num of length of s.length
-
-        long long ans = 0;
-        int n = num.length() - s.length();
-
-        for (int i = 0; i < n;i++){
-            if(limit<(num[i]-'0')){
-                ans+=(long)pow(limit+1, n-i);
-                return ans;
-                //if current digit is larger than limit then we can take all combinations with limit+1 (including 0) digits
-            }
-            ans += (long)(num[i] - '0') * (long)pow(limit + 1, n - 1 - i);
-            //0 to num[i]-1 have no problem with rest of digits [0->limit]
-            //for num[i] we need to check the rest of digits to ensure all combinations do not exceed the num
-
-        }
-        if(s_>=s)
-            ans++;
-        return ans;
-    }
-};
-```
-
-## Weekly Contest 382
-
-### Question 1: 3019. Number of Changing Keys
-
-```cpp
-class Solution {
-public:
-    int countKeyChanges(string s) {
-        char prev = tolower(s[0]);
-        int result = 0;
-        int i = 1;
-        while(i < s.size()){
-            char curr = tolower(s[i]);
-            if(curr == prev){
-                ++i;
-            }
-            else{
-                prev = curr;
-                ++i;
-                ++result;
-            }
-        }
-        return result;
-    }
-};
-```
-
-### Question 2: 3020. Find the Maximum Number of Elements in Subset
-
-```cpp
-//Evaluate frequency of each items in nums
-
-//Then iterate over each items in the map and check for continuation of the 
-//sequence. While doing so set frequency to zero which even items freq 
-//we have checked as a part of the check.
-
-// O(NlogN) Time
-// O(N) Space
-
-class Solution {
-public:
-    int maximumLength(vector<int>& nums) {
-        long long ans = 0; 
-
-        //we have used map and not unordered map as we need to check 
-        //from the lower valued item to the higher value to check sequence.
-        map<int, int> freq;
-
-        for(auto n : nums) freq[n]++;
-        for(auto [key, val]: freq){
-            long long num = key, count = 0;
-            if (num == 1) {
-                count += freq[num]; 
-                freq[num] = 0;
-            }
-            while(num < INT_MAX && freq[num] > 0){
-                count += 2;
-                if(freq[num] == 1) break;
-                // set to zero, so that we do not check for this sequence again
-                freq[num] = 0;
-                num = num * num;
-            }
-            if(count % 2 == 0) count--;
-            ans = max(ans, count);
-        }
-        return ans;
-    }
-};
-```
-
-### Question 3: 3021. Alice and Bob Playing Flower Game
-
-explanation video: https://www.youtube.com/watch?v=2TkWaGBKzTI
-
-bob wins if even alice wins if odd:
-The code calculates the score in a flower game given the number of flowers picked by two players. It multiplies the number of flowers each player picked, then divides the product by 2 to determine the score.
-
-```cpp
-class Solution {
-public:
-    long long flowerGame(int n, int m) {
-        long long a=m;
-        long long b=n;
-        long long s=a*b;
-        return s/2;
-    }
-};
-```
-
-### Question 4: 3022. Minimize OR of Remaining Elements Using Operations
-
-https://leetcode.com/problems/minimize-or-of-remaining-elements-using-operations/solutions/4638224/with-detailed-explanation-different-approach-o-n/
-
-```cpp
-class Solution {
-    public int minOrAfterOperations(int[] nums, int k) {
-        int ans=0;
-        int mask=0; // used for performing operation on prefix of bits
-        for(int j=30;j>=0;j--){ // builds answer bit by bit
-            mask=mask | (1<<j);// mask changes(10000.. -> 11000..->11100..->11110..->111111..)
-
-            int cosecutiveAnd=mask;
-            int mergeCount=0;// no. of merges required to make current bit 0
-            for(int i:nums){
-                cosecutiveAnd = cosecutiveAnd & i; 
-                if((cosecutiveAnd|ans)!=ans) // explained below
-                    mergeCount++; //while above condition is not achieved keep merging
-                else cosecutiveAnd=mask; // else reset cosecutiveAnd to mask(11111..0000...), no need to increase count
-            }
-
-            if(mergeCount>k)
-                ans|=(1<<j);// if(count is more than k, make set curent bit of 1, else it stays 0)
-        }
-        return ans;
-    }
-}
-```
