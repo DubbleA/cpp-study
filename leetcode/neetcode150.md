@@ -880,3 +880,40 @@ public:
     }
 };
 ```
+
+## 84. Largest Rectangle in Histogram
+
+Notes: stack store values in inc order (indexes); whenever pop we account for max area of rectangle (while s.top != -1 and h[i] <= h[s.top]); (rightlimit(i) - leftlimit(s.top) - 1) * currHeight(heights[stack.top()]); if we r left with entries pop them using n as right limit
+
+```cpp
+// O(N) Time
+// O(N) Space
+
+class Solution {
+public:
+    int largestRectangleArea(vector<int>& heights) {
+        stack<int> stack; 
+        stack.push(-1); //left limit
+        int maxArea = heights[0];
+        for(int i = 0; i < heights.size(); ++i){
+            while(stack.top() != -1 and heights[i] <= heights[stack.top()]){
+                int rightlimit = i;
+                int currHeight = heights[stack.top()]; stack.pop();
+                int leftlimit = stack.top();
+                maxArea = max(maxArea, (rightlimit - leftlimit - 1) * currHeight);
+            }
+            stack.push(i);
+        }
+
+        while(stack.top() != -1){
+            int rightlimit = i;
+            int currHeight = heights[stack.top()]; stack.pop();
+            int leftlimit = stack.top();
+            maxArea = max(maxArea, (rightlimit - leftlimit - 1) * currHeight);
+        }
+
+        return maxArea;
+    }
+};
+```
+
