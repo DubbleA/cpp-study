@@ -1,4 +1,4 @@
-## Biweekly Contest 124
+## Biweekly Contest 124 2/17/24
 
 ### Q1: 3038. Maximum Number of Operations With the Same Score I 
 

@@ -1,3 +1,103 @@
+## 2/19/24 231. Power of Two
+```cpp
+class Solution {
+public:
+    bool isPowerOfTwo(int n) {
+        return n > 0 and !(n & n-1);
+    }
+};
+
+// since powers of two only have 1 one in the entire binary representation
+// one minus a power of two is all 1's in its representation i.e. 8 (1000) 7 (111)
+// so if (1000) & (0111) == 0000 since bitwise and needs both digits to be one
+// so !(0000) == 1 therefore its a power of two
+
+
+// 001 2
+// 10000 16
+// 11 3
+// 100 8
+// 110 6
+
+
+// bool isPowerOfTwo(int n) {
+//     if(n < 0) return false;
+//     //count number of 1's in binary representation
+//     unsigned int count = 0;
+//     while (n) {
+//         count += n & 1;
+//         n = n >> 1;
+//     }
+//     return count == 1 ? true : false;
+// }
+```
+
+## 2/18/24 2402. Meeting Rooms III
+
+```cpp
+class Solution {
+public:
+    int mostBooked(int n, vector<vector<int>>& meetings) {
+        sort(meetings.begin(), meetings.end());
+        // pq in asc order to manage next available time for each room
+        // Pair: <next available time, room index>
+        priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<pair<long long, int>>> pq;
+        
+        // Initially, all rooms are available at time 0
+        for (int i = 0; i < n; ++i) pq.push({0, i}); 
+
+        // Count how many times each room is used
+        vector<int> countVec(n, 0); 
+        int maxCount = 0;
+
+        for(auto& mtng: meetings){
+            long long start = mtng[0], end = mtng[1];
+            //necessary to make sure that nextAvailable is at least
+            //at the start time
+            while(pq.top().first < start){
+                pq.push({start, pq.top().second}); pq.pop();
+            }
+            // Wait for the next available room
+            auto [nextAvailable, roomId] = pq.top(); pq.pop();
+            //the time has to be at least the start time + duration
+            pq.push({nextAvailable + (end - start), roomId});
+            countVec[roomId]++;
+            maxCount = max(maxCount, countVec[roomId]);
+        }
+
+        for(int i = 0; i < n; ++i){
+            if(countVec[i] == maxCount) return i;
+        }
+        return 0;
+    }
+};
+
+//TLE SOLUTION:
+// int mostBooked(int n, vector<vector<int>>& meetings) {
+//     sort(meetings.begin(), meetings.end());
+//     vector<int> qVec(n, -1), countVec(n, 0);
+//     queue<pair<int, int>> q;
+//     for(auto& vec : meetings) q.push({vec[0], vec[1] - vec[0]});
+//     int time = 0, maxCount = 0;
+//     while(!q.empty()){
+//         for(int i = 0; i < n; ++i){
+//             if(q.empty()) break;
+//             if ((qVec[i] == -1 or qVec[i] <= time) && q.front().first <= time){
+//                 auto [_, dur] = q.front(); q.pop();
+//                 qVec[i] = time + dur;
+//                 countVec[i]++;
+//                 maxCount = max(maxCount, countVec[i]);
+//             }
+//         }
+//         time++;
+//     }
+//     for(int i = 0; i < n; ++i){
+//         if(countVec[i] == maxCount) return i;
+//     }
+//     return 0;
+// }
+```
+
 ## 2/17/24 1642. Furthest Building You Can Reach
 
 ```cpp
