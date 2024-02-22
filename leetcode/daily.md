@@ -1,3 +1,56 @@
+## 2/21/24 201. Bitwise AND of Numbers Range
+
+```cpp
+class Solution {
+public:
+    int rangeBitwiseAnd(int left, int right) {
+        int count = 0;
+        //keep right shifting until the "prefix" of both numbers match
+        while(left != right){
+            left >>= 1; 
+            right >>= 1;
+            count++;
+        }
+        //then left shift the amount of times we shifted to get our "matching" #
+        return left << count;
+    }
+};
+
+TLE Solution:
+// int rangeBitwiseAnd(int left, int right) {
+//     int res = left;
+//     while(left < right){
+//         res &= left;
+//         left++;
+//     }
+//     return res & right;
+// }
+```
+
+## 2/20/24 268. Missing Number
+
+```cpp
+class Solution {
+public:
+    int missingNumber(vector<int>& nums) {
+        //gauss formula
+        int tsum = 0, vsum = 0;
+        int n = nums.size();
+        for(int i = 0; i <= n; ++i) tsum += i;
+        for(int i = 0; i < n; ++i) vsum += nums[i];
+        return tsum - vsum;
+    }
+
+    int missingNumber(vector<int>& nums) {
+        //bit manip
+        //the surviving number will be our number
+        int missing = nums.size();
+        for (int i = 0; i < nums.size(); ++i) missing ^= i ^ nums[i];
+        return missing;
+    }
+};
+```
+
 ## 2/19/24 231. Power of Two
 ```cpp
 class Solution {

@@ -917,3 +917,59 @@ public:
 };
 ```
 
+# Binary Search
+
+## 704. Binary Search
+
+Notes: Binary search: while l <= r : if mid < target, l = mid + 1 else r = mid - 1
+
+```cpp
+// O(logn) time
+// O(1) space
+
+class Solution {
+public:
+    int search(vector<int>& nums, int target) {
+        int l = 0, r = nums.size() - 1;
+        while(l <= r){
+            int mid = (l + r) / 2;
+            if(nums[mid] == target) return mid;
+            if(nums[mid] < target) l = mid + 1;
+            else r = mid - 1; //nums[mid] > target
+        }
+        return -1;
+    }
+};
+```
+
+## 74. Search a 2D Matrix
+
+Notes: First find correct row. while rowLeft <= rowRight : if(m[i][0] <= target and target <= m[i][n]) we found row.
+else if(m[i][n] <= target) l = i + 1; else r = i - 1; then just regular binary search on the found row m[i][]
+
+```cpp
+// O(log n * m) or O(log n + log m) Time
+// O(1) Space
+ 
+class Solution {
+public:
+    bool searchMatrix(vector<vector<int>>& matrix, int target) {
+        int rowLeft = 0, rowRight = matrix.size() - 1, rowIdx = 0;
+        while(rowLeft <= rowRight){
+            rowIdx = (rowLeft + rowRight) / 2;
+            if (matrix[rowIdx][0] <= target and target <= matrix[rowIdx][matrix[0].size() - 1]) break; //we found the row
+            else if (matrix[rowIdx][matrix[0].size() - 1] <= target) rowLeft = rowIdx + 1;
+            else rowRight = rowIdx - 1; // its in a lower row
+        }
+        int left = 0, right = matrix[0].size() - 1;
+        while(left <= right){
+            int mid = (left + right) / 2;
+            if(matrix[rowIdx][mid] == target) return true;
+            if(matrix[rowIdx][mid] < target) left = mid + 1;
+            else right = mid - 1;
+        }
+        return false;
+    }
+};
+```
+
