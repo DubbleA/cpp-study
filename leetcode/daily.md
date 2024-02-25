@@ -1,3 +1,349 @@
+## 2/24 2709. Greatest Common Divisor Traversal
+
+From solutions tab:
+```cpp
+class Graph {
+private:
+    int n;
+    vector<int> parent, compSize;
+
+    int getParent(int x) {
+        if (parent[x] == x) {
+            return x;
+        }
+        return parent[x] = getParent(parent[x]);
+    }
+
+    void unionSet(int x, int y) {
+        int parx = getParent(x), pary = getParent(y);
+        if (parx != pary) {
+            if (compSize[parx] < compSize[pary]) {
+                swap(parx, pary);
+            }
+            parent[pary] = parx;
+            compSize[parx] += compSize[pary];
+        }
+    }
+
+public:
+    Graph(int n = 0) : n(n) {
+        parent.resize(n);
+        compSize.resize(n, 1);
+        iota(parent.begin(), parent.end(), 0);
+    }
+    
+    void addEdge(int x, int y) {
+        unionSet(x, y);
+    }
+
+    bool isConnected() {
+        return compSize[getParent(0)] == n;
+    }
+};
+
+class Solution {
+private:
+    vector<int> getPrimeFactors(int x) {
+        vector<int> primeFactors;
+        for (int i = 2; i * i <= x; i++) {
+            if (x % i == 0) {
+                primeFactors.push_back(i);
+                while (x % i == 0) {
+                    x /= i;
+                }
+            }
+        }
+        if (x != 1) {
+            primeFactors.push_back(x);
+        }
+        return primeFactors;
+    }
+
+public:
+    bool canTraverseAllPairs(vector<int>& nums) {
+        int n = nums.size();
+        if (n == 1) {
+            return true;
+        }
+        Graph g(n);
+        unordered_map<int, int> seen;
+        for (int i = 0; i < n; i++) {
+            if (nums[i] == 1) {
+                return false;
+            }
+            vector<int> primeFactors = getPrimeFactors(nums[i]);
+            for (int prime: primeFactors) {
+                if (seen.find(prime) != seen.end()) {
+                    g.addEdge(i, seen[prime]);
+                } else {
+                    seen[prime] = i;
+                }
+            }
+        }
+        return g.isConnected();
+    }
+};
+```
+
+TLE Solutions:
+
+```cpp
+struct DisjointSet{
+private:
+    std::vector<int> parent;
+    std::vector<int> size;
+    int cnt;
+    int mx;
+public:
+    DisjointSet(int n): parent(n,0), size(n, 1), cnt{n}, mx(1) {
+        std::iota(begin(parent), end(parent), 0);
+    }
+    int find(int n){
+        if(n == parent[n]) return n;
+        return parent[n] = find(parent[n]);
+    }
+    void combine(int x, int y){
+        auto rootX = find(x);
+        auto rootY = find(y);
+        if(rootX == rootY) return;
+
+        if(size[rootX] < size[rootY]) std::swap(rootX, rootY);
+        size[rootX] += size[rootY];
+        parent[rootY] = rootX;
+        mx = std::max(mx, size[rootX]);
+        cnt--;
+    }
+    bool connected(int x, int y){
+        return find(x) == find(y);
+    }
+    int count() const {
+        return cnt;
+    }
+    int biggest() const {
+        return mx; 
+    }
+};
+
+class Solution {
+public:
+    bool canTraverseAllPairs(vector<int>& nums) {
+        int n = nums.size();
+        DisjointSet ds(n);
+
+        // Iterate through all pairs of indices
+        for (int i = 0; i < n; ++i) {
+            for (int j = i + 1; j < n; ++j) {
+                // If gcd(nums[i], nums[j]) > 1, merge their sets
+                if (gcd(nums[i], nums[j]) > 1) {
+                    ds.combine(i, j);
+                }
+            }
+        }
+
+        // If the count of distinct sets is 1, all pairs are connected
+        return ds.count() == 1;
+    }
+};
+
+
+//TLE
+    bool canTraverseAllPairs(vector<int>& nums) {
+        // Build a graph where edges exist between indices i and j if gcd(nums[i], nums[j]) > 1
+        vector<vector<int>> graph(nums.size());
+        for (int i = 0; i < nums.size(); ++i) {
+            for (int j = i + 1; j < nums.size(); ++j) {
+                //c++17 gcd: 
+                if (gcd(nums[i], nums[j]) > 1) {
+                    graph[i].push_back(j);
+                    graph[j].push_back(i);
+                }
+            }
+        }
+
+        // Check if all nodes are connected
+        for (int i = 0; i < nums.size(); ++i) {
+            vector<bool> visited(nums.size(), false);
+            if (!bfs(graph, visited, i)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool bfs(const vector<vector<int>>& graph, vector<bool>& visited, int start) {
+        queue<int> q;
+        q.push(start);
+        visited[start] = true;
+
+        while (!q.empty()) {
+            int current = q.front(); q.pop();
+
+            for (int next : graph[current]) {
+                if (!visited[next]) {
+                    visited[next] = true;
+                    q.push(next);
+                }
+            }
+        }
+
+        // Check if all nodes were visited
+        return all_of(visited.begin(), visited.end(), [](bool v) { return v; });
+    }
+```
+
+## 2/23 2092. Find All People With Secret
+
+```cpp
+class Solution {
+public:
+    vector<int> findAllPeople(int n, vector<vector<int>>& meetings, int firstPerson) {
+        //create the graph between ppl
+        vector<vector<pair<int,int>>> graph(n);
+        for(auto& mt: meetings){
+            graph[mt[0]].push_back({mt[1], mt[2]}); //person 1 talks person 2 at t
+            graph[mt[1]].push_back({mt[0], mt[2]}); //person 2 talks person 1 at t
+        }
+
+        //minheap sorting by time
+        priority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> q;
+
+        q.push({0, firstPerson}); //person 0 tells first person time 0
+        q.push({0, 0}); //person 0 knows at time 0
+
+        vector<bool> visited(n, false);
+        //mark person true if they have met and shared to all possible ppl
+
+        while(!q.empty()){
+            auto [time, person] = q.top(); q.pop();
+
+            if(visited[person]) continue; //if person alr processed / shared
+            visited[person] = true;
+
+            //iterate all the meetings of this person and add the potential ppl in q;
+            for(auto [neighbor, newTime] : graph[person]){
+                if(!visited[neighbor] && time <= newTime){
+                    q.push({newTime, neighbor});
+                }
+            }
+        }
+        vector<int> res;
+        for(int i = 0; i < visited.size(); ++i) if(visited[i]) res.push_back(i);
+        return res;
+
+    }
+};
+
+//TLE
+// class Solution {
+// public:
+//     vector<int> findAllPeople(int n, vector<vector<int>>& meetings, int firstPerson) {
+//         map<int, vector<pair<int, int>>> graph; //timestamp p1 p2
+//         // graph[0].push_back({0, firstPerson}); //person 0 tells first person
+//         for(auto mtg : meetings) graph[mtg[2]].push_back({mtg[0], mtg[1]});
+
+//         vector<bool> known(n, false);
+//         known[0] = true; // Person 0 knows the secret
+//         known[firstPerson] = true; // firstPerson knows the secret
+
+//         for (const auto& [time, pairs] : graph) {
+//             // Temporarily track who learns the secret in this round
+//             vector<bool> tempKnown = known;
+//             queue<int> q;
+//             // Add everyone who already knows the secret to the queue
+//             for (int i = 0; i < n; ++i) {
+//                 if (known[i]) q.push(i);
+//             }
+            
+//             while (!q.empty()) {
+//                 int person = q.front(); q.pop();
+//                 for (const auto& [p1, p2] : pairs) {
+//                     if (p1 == person && !tempKnown[p2]) {
+//                         tempKnown[p2] = true;
+//                         q.push(p2);
+//                     } else if (p2 == person && !tempKnown[p1]) {
+//                         tempKnown[p1] = true;
+//                         q.push(p1);
+//                     }
+//                 }
+//             }
+            
+//             // Update the known status for the next timestamp
+//             for (int i = 0; i < n; ++i) {
+//                 if (tempKnown[i]) known[i] = true;
+//             }
+//         }
+
+//         vector<int> res;
+//         for(int i = 0; i < known.size(); ++i) {
+//             if(known[i]) res.push_back(i);
+//         }
+//         return res;
+//     }
+// };
+```
+
+```cpp
+class Solution {
+public:
+    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {
+        unordered_map<int, vector<pair<int,int>>> graph; //from -> to, price
+
+        for(auto& vec: flights){
+            graph[vec[0]].push_back({vec[1], vec[2]});
+        }
+
+        // Queue for BFS: Each element is a tuple (node, cost, stops)
+        queue<vector<int>> q;
+        q.push({src, 0, 0});
+
+        // Vector to track the minimum cost to reach each node
+        vector<int> minCost(n, INT_MAX);
+        minCost[src] = 0;
+
+        while(!q.empty()){
+            auto front = q.front(); q.pop();
+            int node = front[0], cost = front[1], stops = front[2];
+            // If the number of stops exceeds K, continue to the next iteration
+            if (stops > k) continue;
+
+            for(auto& [neighbor, price] : graph[node]){
+                int nextCost = cost + price;
+                if(nextCost < minCost[neighbor]){
+                    minCost[neighbor] = nextCost;
+                    q.push({neighbor, nextCost, stops + 1});
+                }
+            }
+        }
+        // Check if the destination is reachable within K stops
+        return minCost[dst] == INT_MAX ? -1 : minCost[dst];
+    }
+
+};
+```
+
+## 2/22/24 997. Find the Town Judge
+
+```cpp
+class Solution {
+public:
+    int findJudge(int n, vector<vector<int>>& trust) {
+        if(n <= 1) return n;
+        unordered_set<int> s; //trustees
+        unordered_map<int, int> m; //trust freq
+        for(auto& vec: trust) {
+            s.insert(vec[0]);
+            m[vec[1]]++;
+        };
+        for(auto& vec: trust) if(s.find(vec[1]) == s.end()) {
+            if(m[vec[1]] == n - 1) return vec[1];
+        };
+        return -1;
+
+    }
+};
+```
+
 ## 2/21/24 201. Bitwise AND of Numbers Range
 
 ```cpp

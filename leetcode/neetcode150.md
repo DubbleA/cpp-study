@@ -973,3 +973,147 @@ public:
 };
 ```
 
+## 875. Koko Eating Bananas
+
+Notes: sort piles, l = 1, r = p[n-1]. while (l <= r) binary search. unsigned int rate = kokoSim(piles, h, m); if(rate <= h) minrate update, r = m - 1; else l = m + 1
+
+```cpp
+// O(nlogn+nlogk) -> O(nlogn) bc we sort + binary search on k eating speeds
+// O(1) space
+
+class Solution {
+public:
+    int minEatingSpeed(vector<int>& piles, int h) {
+        sort(piles.begin(), piles.end());
+        int left = 1, right = piles[piles.size() - 1];
+        int minrate = INT_MAX;
+
+        while(left <= right){
+            int mid = (left + right) / 2;
+            unsigned int rate = kokoHelper(piles, h, mid);
+            if(rate <= h){
+                minrate = min(minrate, mid);
+                right = mid - 1;
+            }
+            else left = mid + 1;
+        }
+        return minrate;
+
+
+    }
+    int kokoHelper(vector<int>& piles, int h, int rate){
+        unsigned int thour = 0;
+        for(auto& n : piles){
+            if(rate>=n) thour++;
+            else{
+                thour += n / rate;
+                if(n % rate > 0) thour++;
+            }
+        }
+
+        return thour;
+    }
+};
+```
+
+## 153. Find Minimum in Rotated Sorted Array
+
+Notes: if the mid value > nums right (the minimum can only be to the right, bc of the rotate), then the minimum is on the right partition, otherwise its in the left partition.
+
+```cpp
+//O(log n) Time 
+//O(1) Space
+
+class Solution {
+public:
+    int findMin(vector<int>& nums) {
+        int left = 0, right = nums.size() - 1, minVal = INT_MAX;
+        while(left <= right){
+            int mid = (left + right) / 2;
+            // min is on right partition
+            if(nums[mid] > nums[right]) left = mid + 1;
+            else{ // min on left partition
+                minVal = min(minVal, nums[mid]);
+                right = mid - 1;
+            }
+        }
+        return minVal;
+    }
+};
+```
+
+## 33. Search in Rotated Sorted Array
+
+Notes: if(n[m] > n[r]) //part of rotation is on right, check target in left partition
+        if(n[l] <= tgt < n[m]) r = m - 1; else l = m + 1; 
+       else //part of rotation is on left, check target in right partition
+        if(n[m] < tgt <= n[r]) l = m + 1; else r = m - 1;
+
+```cpp
+// O(logn) time
+// O(1) space
+
+class Solution {
+public:
+    int search(vector<int>& n, int target) {
+        int l = 0, r = n.size() - 1;
+        while(l <= r){
+            int m = (l + r) / 2;
+            if(n[m] == target) return m;
+            //part of the rotation is on the right
+            if(n[m] > n[r]){
+                //target might be in left partition
+                if(n[l] <= target and target < n[m]) r = m - 1;
+                else l = m + 1;
+            }
+            else{
+                //target might be in the right partition
+                if(n[m] < target and target <= n[r]) l = m + 1;
+                else r = m - 1;
+            }
+        }
+        return -1;
+    }
+};
+```
+
+## 981. Time Based Key-Value Store
+
+Notes: map<str key, map<int time, str value>> m; for get .upper_bound(timestamp). if it == .begin() no elem leq to timestamp return "", else --it (step back 1) and return it->second.
+```cpp
+// Time Complexity:
+// O(log m) per operation for set & get functions. 
+
+// m is the number of timestamp-value pairs for the key.
+
+// O(k x m) space where m is same as above and k is the # of keys. bc of our map of maps
+
+class TimeMap {
+public:
+    std::map<string, std::map<int, string>> m; //str key -> <int time, str value>
+    TimeMap() {
+        
+    }
+    
+    void set(string key, string value, int timestamp) {
+        m[key].insert({timestamp, value});
+    }
+    
+    string get(string key, int timestamp) {
+        //std::upper_bound searches for the first element in a sorted range 
+        //that is greater than a given value. 
+        //If no such element exists (i.e., all elements in the range are 
+        //leq to the given value), std::upper_bound 
+        //returns an iterator to the end of the range. (i.e. m[key].end())
+        //therefore if its still at m[key].begin(), we did not find anything leq
+        
+        if(m.find(key) == m.end()) return ""; // key not found
+        //finds first greater elem than timestamp
+        auto it = m[key].upper_bound(timestamp); 
+        if(it == m[key].begin()) return ""; //no elem leq timestamp
+        // Since 'upper_bound' finds the first greater element, we step back to find the lesser or equal
+        --it;
+        return it->second;
+    }
+};
+```
