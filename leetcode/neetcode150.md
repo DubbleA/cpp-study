@@ -1117,3 +1117,67 @@ public:
     }
 };
 ```
+
+## 4. Median of Two Sorted Arrays
+
+Notes: if (A size > B size) swap(A, B)
+int total, l = 0, r = a size() [dont subtract 1]
+double result;
+
+while l <= r
+partition A i = l + (r - l) / 2; to avoid overflow
+j = (total + 1) / 2 - i; B partition (half point - rest)
+
+partition A top, A next, B top, B next. (A[i-1]) for left A[i] for next. use INT_MAX / INT_MIN 
+for left and right bounds
+
+if(Atop leq Bnext and Btop leq Anext) partition is correct return max(atop, btop) if odd else
+add max(atop,btop) and min(anext,bnext) / 2.
+else if Atop > Bnext : r = m - 1
+else l = m + 1
+
+```cpp
+// O(log(min(n, m))) Time
+// O(1) Space
+
+class Solution {
+public:
+    double findMedianSortedArrays(vector<int>& A, vector<int>& B) {
+        if (A.size() > B.size()) swap(A, B);
+        
+        int total = A.size() + B.size();
+        int l = 0, r = A.size();
+        double result = 0.0;
+        
+        while (l <= r) {
+            // A
+            int i = l + (r - l) / 2;
+            // B partition (half point - rest)
+            int j = (total + 1) / 2 - i;
+            
+            int Aleft = (i > 0) ? A[i - 1] : INT_MIN;
+            int Aright = (i < A.size()) ? A[i] : INT_MAX;
+            int Bleft = (j > 0) ? B[j - 1] : INT_MIN;
+            int Bright = (j < B.size()) ? B[j] : INT_MAX;
+            
+            // partition is correct
+            if (Aleft <= Bright && Bleft <= Aright) {
+                // even
+                if (total % 2 == 0) {
+                    result = (max(Aleft, Bleft) + min(Aright, Bright)) / 2.0;
+                // odd
+                } else {
+                    result = max(Aleft, Bleft);
+                }
+                break;
+            } else if (Aleft > Bright) {
+                r = i - 1;
+            } else {
+                l = i + 1;
+            }
+        }
+        
+        return result;
+    }
+};
+```
