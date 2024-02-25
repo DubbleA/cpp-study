@@ -1,3 +1,172 @@
+## Weekly Contest 386 2/24/2024
+
+### Q1: 3046. Split the Array
+
+```cpp
+class Solution {
+public:
+    bool isPossibleToSplit(vector<int>& nums) {
+        unordered_map<int, int> m;
+        for(auto n : nums) m[n]++;
+        for(auto [n, freq] : m) if(freq > 2) return false;
+        return true;
+    }
+};
+```
+
+### Q2: 3047. Find the Largest Area of Square Inside Two Rectangles
+
+```cpp
+class Solution {
+public:
+    long long largestSquareArea(vector<vector<int>>& bottomLeft, vector<vector<int>>& topRight) {
+        int n = bottomLeft.size();
+        //brute force rectangle pairs
+        long long maxArea = 0;
+        for(int i = 0; i < n - 1; ++i){
+            for(int j = i + 1; j < n; ++j){
+                auto min_x = max(bottomLeft[i][0], bottomLeft[j][0]);
+                auto max_x = min(topRight[i][0], topRight[j][0]);
+                auto min_y = max(bottomLeft[i][1], bottomLeft[j][1]);
+                auto max_y = min(topRight[i][1], topRight[j][1]);
+
+                if(min_x < max_x && min_y < max_y){
+                    long long side = min(max_x - min_x, max_y - min_y);
+                    maxArea = max(maxArea, side * side);
+                }
+            }
+        }
+        return maxArea;
+    }
+};
+```
+
+### Q3: 3048. Earliest Second to Mark Indices I
+
+```cpp
+class Solution {
+public:
+    int earliestSecondToMarkIndices(vector<int>& nums, vector<int>& changeIndices) {
+        //use binary search to find the earliest possible index 
+        //that satisfies the requirements.
+
+        int l = 0, r = changeIndices.size();
+        while(l <= r){
+            int m = (l + r) / 2;
+            if(binarySearch(nums, changeIndices, m)){
+                r = m - 1;
+            } 
+            else l = m + 1;
+        }
+        return r == changeIndices.size() ? -1 : r + 1;
+    }
+
+    //we first find the last occurrence of changeIndices[i] in the array. 
+    //This is because we need to make nums[changeIndices[i]] zero before this index.
+    //we check whether all the indices are present. 
+    //If any are missing, it means that it is impossible to mark all the indices.
+
+    //Next, we use cnt to record the number of times we can do reduce operations. 
+    //If the current index is the last occurrence of changeIndices[i], 
+    //then we check if there is a way to make nums[changeIndices[i] - 1] 
+    //(note the -1, since it is 1-indexed) zero.
+
+
+    //If nums[changeIndices[i] - 1] > cnt, it means that it 
+    //cannot be reduced to zero. In this case, we return False.
+    bool binarySearch(vector<int>& nums, vector<int>& changeIndices, int idx) {
+        unordered_map<int, int> last;
+        for (int i = 0; i < idx; i++) last[changeIndices[i]] = i;
+        if (last.size() != nums.size()) return false;
+        int cnt = 0; // record we can reduce how many number
+        for (int i = 0; i < idx; i++) {
+            // if it is last time we visit this idx, we must mark
+            // so check whether this idx already reduce to zero, if not, then return false.
+            if (i == last[changeIndices[i]]) {
+                if (cnt < nums[changeIndices[i] - 1]) return false;
+                else cnt -= nums[changeIndices[i] - 1];
+            } else {
+                cnt++;
+            }
+        }
+        return true;
+    }
+};
+```
+
+### Q4: 3049. Earliest Second to Mark Indices II
+
+im not even gonna pretend like I understand what the hell is going on here
+https://leetcode.com/problems/earliest-second-to-mark-indices-ii/solutions/4778732/python3-binary-search-heap/
+
+```cpp
+class Solution {
+public:
+
+    bool isItPossible(vector<int> & nums, vector<int> & v, int m) {
+        
+        long long int tot = 0;
+
+        vector<int> temp(nums.size() + 1, -1);
+        vector<int> taken(v.size() + 1);
+        priority_queue<int, vector<int>, greater<int>> pq;
+
+        for(int i = 0; i < nums.size(); i ++) {
+            tot += nums[i] + 1;
+        }
+
+        for(int i = 0; i < v.size(); i ++) {
+            if(temp[v[i]] == -1 && nums[v[i] - 1] > 0) {
+                temp[v[i]] = i;
+                taken[i] = v[i];
+            }
+        }
+
+        int mark = 0;
+        for(int i = m - 1; i >= 0; i --) {
+            if(taken[i] > 0) {
+                pq.push(nums[v[i] - 1]);
+                if(mark > 0) {
+                    mark --;
+                } else {
+                    mark ++;
+                    pq.pop();
+                }
+            } else {
+                mark += 1; 
+            }
+        }
+
+        while(!pq.empty()) {
+            tot -= pq.top();
+            pq.pop();
+            tot --;
+        }
+        return tot <= mark;
+    }
+
+
+    int earliestSecondToMarkIndices(vector<int>& nums, vector<int>& changeIndices) {
+        int m = changeIndices.size();
+        int start = 1, end = m, ans = INT_MAX;
+        while(start <= end) {
+            int mid = (start + end) / 2;
+            if(isItPossible(nums, changeIndices, mid)) {
+                ans = mid;
+                end = mid - 1;
+            } else {
+                start = mid + 1;
+            }
+        }
+
+        if(ans == INT_MAX) return -1;
+
+        return ans;
+
+    }
+};
+```
+
 ## Biweekly Contest 124 2/17/24
 
 ### Q1: 3038. Maximum Number of Operations With the Same Score I 
