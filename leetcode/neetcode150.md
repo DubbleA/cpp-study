@@ -1136,6 +1136,8 @@ add max(atop,btop) and min(anext,bnext) / 2.
 else if Atop > Bnext : r = m - 1
 else l = m + 1
 
+https://www.youtube.com/watch?v=q6IEA26hvXc
+
 ```cpp
 // O(log(min(n, m))) Time
 // O(1) Space
@@ -1181,3 +1183,5 @@ public:
     }
 };
 ```
+
+# Linked List

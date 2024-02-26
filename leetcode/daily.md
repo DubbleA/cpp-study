@@ -1,3 +1,22 @@
+## 2/25 100. Same Tree
+
+```cpp
+class Solution {
+public:
+    bool isSameTree(TreeNode* p, TreeNode* q) {
+        return dfs(p, q);
+    }
+
+    bool dfs(TreeNode* p, TreeNode* q){
+        if(!p and !q) return true;
+        if(p and !q or !p and q) return false;
+        if(p->val != q->val) return false;
+        return dfs(p->left, q->left) and dfs(p->right, q->right); 
+    }
+};
+```
+
+
 ## 2/24 2709. Greatest Common Divisor Traversal
 
 From solutions tab:
