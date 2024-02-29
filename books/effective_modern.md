@@ -1251,6 +1251,11 @@ Widget” must be executed before the std::shared_ptr constructor may be called,
 because the result of that new is used as an argument to that constructor, but compute
 Priority may be executed before those calls, after them, or, crucially, between them. 
 
+Compilers may emit code to execute the operations in this order:
+1. Perform "new Widget".
+2. Execute computePriority
+3. Run std::shared_ptr constructor. 
+
 If such code is generated and, at runtime, computePriority produces an exception,
 the dynamically allocated Widget from Step 1 will be leaked, because it will never be
 stored in the std::shared_ptr that’s supposed to start managing it in Step 3.
@@ -1266,3 +1271,79 @@ specify custom deleters and a desire to pass braced initializers.
 ill-advised include (1) classes with custom memory management and (2) sys‐
 tems with memory concerns, very large objects, and std::weak_ptrs that
 outlive the corresponding std::shared_ptr
+
+## Item 22: When using the Pimpl Idiom, define special member functions in the implementation file
+
+To combat build times, we can utilize the "pointer to implementation" Idiom. It's a technique whereby 
+you replace the data members of a class with a pointer to an implementation class (or struct), put the 
+data members that used to be in the primary class into the implementation class, and access those data members indirectly through the pointer. 
+
+```cpp
+//widget.h
+class Widget {
+public:
+    Widget();
+
+private: 
+    std::string name;
+    std::vector<double> data;
+    Gadget g1, g2, g3; //Gadget is some user-defined type
+};
+```
+
+Because Widget's data members are types std::string, std::vector, and Gadget, headers for those types
+must be present for Widget to compile (i.e. #include <string>, <vector>, & gadget.h). The headers increase
+the compilation time for Widget clients, plus they make those clients dependent on the contents of the headers. If the content of a header changes, Widget must recompile. 
+
+```cpp
+//widget.h
+class Widget {
+public:
+    Widget();
+    ~Widget(); //dtor is needed
+
+private: 
+    struct Impl; //declare impl struct
+    std::unique_ptr<Impl> pImpl; //and pointer to it (use smart pointer instead of raw)
+};
+```
+
+Since we dont have the same include headers for Gadget, string, and vector, we speed up compilation.
+Also if something changes in string, vector, or Gadget, Widget clients are unaffected. 
+
+Widget::Impl is a type that has been declared, but not defined and is known as an incomplete type. However, since we can declare a pointer to an incomplete type, we can take advantage of the Pimpl Idiom. 
+
+Part 1 of the Pimpl Idiom is the declaration of a data member that's a pointer to an incomplete type. Part 2 is the dynamic allocation and deallocation of the object that holds the data members that used to be in the original class. The allocation and deallocation code goes into the implementation file, e.g. for Widget. 
+
+```cpp
+//in widget.cpp (impl file)
+#include "widget.h"
+#include "gadget.h"
+#include <string>
+#include <vector>
+
+//definition of Widget::Impl with data members formerly in Widget
+struct Widget::Impl {
+    std::string name;
+    std::vector<double> data;
+    Gadget g1, g2, g3;
+};
+
+// allocate data members for this Widget object
+Widget::Widget() : pImpl(std::make_unique<Impl>()) {}
+```
+
+since we are using smart pointer we dont need a destructor to do:
+
+```cpp
+//destroy data members for this object
+Widget::~Widget(){ delete pImpl; }
+```
+
+std::unique_ptr automatically deletes what it points to when it (the std::unique_ptr) is destroyed, so we need not delete anything ourselves. That’s one of the attractions of smart pointers: they eliminate the need for us to impl manual resource release.
+
+### Things to Remember
+- The Pimpl Idiom decreases build times by reducing compilation dependencies between class clients and class implementations.
+- For std::unique_ptr pImpl pointers, declare special member functions in the class header, but implement them in the implementation file. Do this even if the default function implementations are acceptable.
+- The above advice applies to std::unique_ptr, but not to std::shared_ptr.
+
