@@ -1207,3 +1207,62 @@ However, it’s worth noting that the need to employ std::weak_ptrs to break pro
 ### Things To Remember 
 - Use std::weak_ptr for std::shared_ptr-like pointers that can dangle.
 - Potential use cases for std::weak_ptr include caching, observer lists, and the prevention of std::shared_ptr cycles.
+
+## Item 21: Prefer std::make_unique and std::make_shared to direct use of new
+
+std::make_unique and std::make_shared are 2 of the 3 make functions:
+Make functions are functions that:
+1. take an arbitrary set of arguments
+2. perfect-forward them to the constructor for a dynamically allocated object
+3. return a smart pointer to that object.
+
+The third make function is std::allocate_shared. It acts just like std::make_shared, except its first argument is an allocator object to be used for the dynamic memory allocation.
+
+```cpp
+auto upw1(std::make_unique<Widget>()); // with make func
+std::unique_ptr<Widget> upw2(new Widget); // without make func
+auto spw1(std::make_shared<Widget>()); // with make func
+std::shared_ptr<Widget> spw2(new Widget); // without make fun
+```
+
+the versions using new repeat the type being created, but the make functions don’t.
+Repeating this is a duplication of source code which increases compilation times and can lead
+to bloated code. 
+
+A second reason to prefer make functions is exception safety. The new keyword could leak a potential
+Widget object. The reason is because of how the compiler translates source code into object code. At
+runtime, the arguments for a function must be evaluated before the function can be invoked.
+
+```cpp
+//potential resource leak!
+processWidget(std::shared_ptr<Widget>(new Widget), computePriority()); 
+
+// no potential resource leak
+processWidget(std::make_shared<Widget>(), computePriority()); 
+```
+
+when using the "new" keyword, the following things must occur before processWidget can begin execution
+- The expression “new Widget” must be evaluated, i.e., a Widget must be created on the heap.
+- The constructor for the std::shared_ptr<Widget> responsible for managing the pointer produced by new must be executed.
+- computePriority must run.
+
+Compilers are not required to generate code that executes them in this order. “new
+Widget” must be executed before the std::shared_ptr constructor may be called,
+because the result of that new is used as an argument to that constructor, but compute
+Priority may be executed before those calls, after them, or, crucially, between them. 
+
+If such code is generated and, at runtime, computePriority produces an exception,
+the dynamically allocated Widget from Step 1 will be leaked, because it will never be
+stored in the std::shared_ptr that’s supposed to start managing it in Step 3.
+
+Sometimes it might be beneficial to use std::move to pass by rvalue instead of lvalue copy. For std::shared_ptr, the difference can be significant, because copying a std::shared_ptr requires an atomic increment of its reference count, while moving a std::shared_ptr requires no reference count manipulation at all. For the exception-safe code to achieve the level of performance of the exception-unsafe code, we need to apply std::move to turn it into an rvalue (see Item 23).
+
+### Things to Remember
+- Compared to direct use of new, make functions eliminate source code duplica‐
+tion, improve exception safety, and, for std::make_shared and std::allocate_shared, generate code that’s smaller and faster.
+- Situations where use of make functions is inappropriate include the need to
+specify custom deleters and a desire to pass braced initializers.
+- For std::shared_ptrs, additional situations where make functions may be
+ill-advised include (1) classes with custom memory management and (2) sys‐
+tems with memory concerns, very large objects, and std::weak_ptrs that
+outlive the corresponding std::shared_ptr
