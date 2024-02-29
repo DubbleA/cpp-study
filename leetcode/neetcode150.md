@@ -1185,3 +1185,148 @@ public:
 ```
 
 # Linked List
+
+## 206. Reverse Linked List
+
+Notes: swap curr->next and prev, and return prev;
+
+```cpp
+// O(N) Time
+// O(1) Space
+
+class Solution {
+public:
+    ListNode* reverseList(ListNode* head) {
+        ListNode* prev = nullptr;
+        ListNode* curr = head;
+
+        while(curr){
+            ListNode* temp = curr->next;
+            curr->next = prev;
+            prev = curr;
+            curr = temp;
+        }
+
+        return prev;
+    }
+};
+```
+
+## 21. Merge Two Sorted Lists
+
+Notes: new ListNode(), while l1 and l2 if(l1->val <= l2val) curr->next = l1; return head->next
+
+```cpp
+// O(N + M) Time
+// O(1) Space
+class Solution {
+public:
+    ListNode* mergeTwoLists(ListNode* list1, ListNode* list2) {
+        ListNode* head = new ListNode(0);
+        ListNode* curr = head;
+
+        while(list1 && list2){
+            if(list1->val <= list2->val){
+                curr->next = list1;
+                list1 = list1->next;
+            }
+            else{
+                curr->next = list2;
+                list2 = list2->next;
+            }
+
+            curr = curr->next;
+        }
+        if(list1) curr->next = list1;
+        if(list2) curr->next = list2;
+        return head->next;
+    }
+};
+```
+
+## 143. Reorder List
+
+Notes: //split list (slow, fast method), reverse second list, merge lists
+
+```cpp
+// O(N) Time
+// O(1) Space
+class Solution {
+public:
+    void reorderList(ListNode* head) {
+        if (!head or !head->next) return;
+        //split list, reverse second list, merge lists
+        ListNode* slow = head;
+        ListNode* fast = head;
+        //split list
+        ListNode* prev = nullptr;
+        while(fast && fast->next){
+            prev = slow;
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        prev->next = nullptr;
+
+        //reverse second list
+        prev = nullptr;
+        while(slow){
+            ListNode* temp = slow->next;
+            slow->next = prev;
+            prev = slow;
+            slow = temp;
+        }
+        
+        //merge lists
+        ListNode* l1 = head;
+        ListNode* l2 = prev;
+        ListNode* newHead = new ListNode(0);
+        while (l1 && l2){
+            newHead->next = l1;
+            l1=l1->next;
+            newHead = newHead->next;
+            newHead->next = l2;
+            l2 = l2->next;
+            newHead = newHead->next;
+        }
+        head = newHead->next;
+    }   
+};
+```
+
+## 19. Remove Nth Node From End of List
+
+Notes: for(i in range n) right = right->next; if !right return head->next. then iterate left and right. if left and prev: prev->next = left->next
+
+```cpp
+// O(N) Time
+// O(1) Space
+
+class Solution {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        //slow fast method for n stops
+
+        //first get a lead of size n with right pointer
+        ListNode* right = head;
+        for(int i = 0; i < n; ++i){
+            right = right->next;
+        }
+        //if right is null then remove end of list
+        if(!right) return head->next;
+        ListNode* prev = nullptr;
+        ListNode* left = head;
+
+        //iterate one by one until end
+        while(right){
+            prev = left;
+            left = left->next;
+            right = right->next;
+        }
+
+        //skip nth node
+        if(prev and left) prev->next = left->next;
+        
+        return head;
+    }
+};
+```

@@ -1,3 +1,82 @@
+## 2/28 1609. Even Odd Tree
+
+```cpp
+using T = tuple<TreeNode*, int>; //node, height
+class Solution {
+public:
+    bool isEvenOddTree(TreeNode* root) {
+        queue<T> q;
+        q.push({root, 0});
+
+        int prev = -1; // Initialize prev outside 
+        int currHeight = 0;
+
+        while(!q.empty()){
+            auto [node, height] = q.front(); q.pop();
+            if(!node) continue; //node is nullptr
+
+            if(currHeight != height){
+                currHeight = height;
+                prev = (height % 2 == 0) ? -1 : INT_MAX; // Reset prev based on level
+            }
+
+            if(height % 2 == 0){ //even rules
+                if(node->val % 2 != 1 or node->val <= prev) return false;
+            }
+            else{ //odd rules
+                if(node->val % 2 != 0 or node->val >= prev) return false;
+            }
+            prev = node->val;
+
+            q.push({node->left, height + 1});
+            q.push({node->right, height + 1});
+        }
+        return true;
+    }
+};
+```
+
+## 2/27 513. Find Bottom Left Tree Value
+
+```cpp
+class Solution {
+public:
+    int findBottomLeftValue(TreeNode* root) {
+        vector<vector<int>> heights;
+        dfs(root, 0, heights);
+        return heights[heights.size() - 1][0];
+    }
+    void dfs(TreeNode* root, int height, vector<vector<int>>& heights){
+        if(!root) return;
+        if(heights.size() == height) heights.push_back({});
+        dfs(root->left, height + 1, heights);
+        heights[height].push_back(root->val);
+        dfs(root->right, height + 1, heights);
+    }
+};
+```
+
+## 2/26 543. Diameter of Binary Tree
+
+```cpp
+class Solution {
+public:
+    int diameterOfBinaryTree(TreeNode* root) {
+        //max height or max left + right
+        int diameter = 0;
+        dfs(root, diameter);
+        return diameter;
+    }
+    int dfs(TreeNode* root, int& diameter){
+        if(!root) return 0;
+        int left = dfs(root->left, diameter);
+        int right = dfs(root->right, diameter);
+        diameter = max(diameter, left + right);
+        return max(left, right) + 1;
+    }
+};
+```
+
 ## 2/25 100. Same Tree
 
 ```cpp
@@ -15,7 +94,6 @@ public:
     }
 };
 ```
-
 
 ## 2/24 2709. Greatest Common Divisor Traversal
 
