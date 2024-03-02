@@ -23,7 +23,6 @@ public:
 };
 ```
 
-
 ## 242. Valid Anagram
 
 Notes: unordered_map with char, int frequency. and check if theyre equal
@@ -1329,4 +1328,286 @@ public:
         return head;
     }
 };
+```
+
+## 138. Copy List with Random Pointer
+
+Notes: First pass copy all nodes into u_map<node* orig, node* copy>. in second pass update links (m[curr]->next = m[curr->next]) etc
+
+```cpp
+//O(N) Time
+//O(N) Space
+
+class Solution {
+public:
+    Node* copyRandomList(Node* head) {
+        unordered_map<Node*, Node*> m;
+
+        // First pass: Copy all nodes and store the mapping
+        Node* curr = head;
+        while(curr){
+            m[curr] = new Node(curr->val);
+            curr = curr->next;
+        }
+
+        // Second pass: Assign next and random pointers
+        curr = head;
+        while(curr){
+            m[curr]->next = m[curr->next];
+            m[curr]->random = m[curr->random];
+            curr = curr->next;
+        }
+        return m[head];
+    }
+};
+```
+
+## 2. Add Two Numbers
+
+Notes: while(l1 or l2 or carry != 0): int val = l1val + l2val + carry, carry = val/10, curr->next = new Node(val%10)
+
+```cpp
+// O(N) Time
+// O(1) Space
+
+class Solution {
+public:
+    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+        ListNode* newHead = new ListNode(0);
+        ListNode* curr = newHead;
+        int carry = 0;
+
+        while(l1 or l2 or carry != 0){
+            int l1val = l1 ? l1->val : 0;
+            int l2val = l2 ? l2->val : 0;
+            int val = l1val + l2val + carry;
+            carry = val / 10;
+            curr->next = new ListNode(val % 10);
+            l1 = l1 ? l1->next : nullptr;
+            l2 = l2 ? l2->next : nullptr;
+            curr = curr->next;
+        }
+        return newHead->next;
+    }
+};
+```
+
+## 141. Linked List Cycle
+
+Notes: slow and fast
+
+```cpp
+// O(N) Space
+// O(1) Time
+class Solution {
+public:
+    bool hasCycle(ListNode *head) {
+        ListNode* slow = head;
+        ListNode* fast = head;
+        while(fast and fast->next){
+            slow = slow->next;
+            fast = fast->next->next;
+            if(slow == fast) return true;
+        }
+        return false;
+    }
+};
+```
+
+## 287. Find the Duplicate Number
+
+Notes: Floyd's slow and fast: do while (s != f) s = n[s], f = n[n[f]] to find intersection point. then find entrance to cycle s = n[0] and while(...) s=n[s],f=n[f] return s
+
+```cpp
+//O(N) Time
+//O(1) Space
+class Solution {
+public:
+    int findDuplicate(vector<int>& nums) {
+        // Find the intersection point of the two runners.
+        int slow = nums[0];
+        int fast = nums[0];
+
+        // In a "do-while" loop, the loop's body is executed first, and then the condition is evaluated.
+        do {
+            slow = nums[slow];
+            fast = nums[nums[fast]];
+        } while (slow != fast);
+
+        // Find the "entrance" to the cycle.
+        slow = nums[0];
+        while (slow != fast) {
+            slow = nums[slow];
+            fast = nums[fast];
+        }
+
+        return slow;
+    }
+};
+```
+
+# Trees
+
+## 226. Invert Binary Tree
+
+Notes: swap(root->right, root->left), dfs(left), dfs(right)
+
+```cpp
+//O(N) Time
+//O(1) Space
+
+class Solution {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        dfs(root);
+        return root;
+    }
+    void dfs(TreeNode* root){
+        if(!root) return;
+        swap(root->left, root->right);
+        dfs(root->left);
+        dfs(root->right);
+    }
+};
+```
+
+## 104. Maximum Depth of Binary Tree
+
+Notes: dfs() rightHeight = dfs(root->right) + 1; leftHeight = dfs(root->left) + 1. return max(r, l)
+
+```cpp
+//O(N) Time
+//O(1) Space
+
+class Solution {
+public:
+    int maxDepth(TreeNode* root) {
+        return dfs(root);
+    }
+    int dfs(TreeNode* root){
+        if(!root) return 0;
+        int rHeight = dfs(root->right) + 1;
+        int lHeight = dfs(root->left) + 1;
+
+        return max(rHeight, lHeight);
+    }
+};
+```
+
+## 543. Diameter of Binary Tree
+ 
+Notes: left & right = dfs(root->dir, width), width = max(width, left + right), return max(left,right) + 1, return width
+
+```cpp
+// O(N) Time
+// O(1) Space
+
+class Solution {
+public:
+    int diameterOfBinaryTree(TreeNode* root) {
+        int width = 0;
+        dfs(root, width);
+        return width;
+    }
+    int dfs(TreeNode* root, int& width){
+        if(!root) return 0;
+        //find longest path in left & right child
+        int left = dfs(root->left, width);
+        int right = dfs(root->right, width);
+        //update diameter if left_path + right_path is larger
+        width = max(width, left + right);
+        //return the longest path + 1 including parent
+        return max(left, right) + 1;
+    }
+};
+```
+
+## 110. Balanced Binary Tree
+
+Notes: dfs height, modify to return -1 if (rHeight/lHeight == -1 or abs(rHeight - lHeight) > 1)
+
+```cpp
+//O(N) Time
+//O(1) Space
+class Solution {
+public:
+    bool isBalanced(TreeNode* root) {
+        if(!root) return true;
+        return dfs(root) != -1;
+    }
+
+    int dfs(TreeNode* root){
+        if(!root) return 0;
+        int rHeight = dfs(root->right);
+        int lHeight = dfs(root->left);
+
+        if(rHeight == -1 or lHeight == -1 or abs(rHeight - lHeight) > 1) return -1;
+        return max(rHeight, lHeight) + 1;
+    }
+};
+```
+
+## 100. Same Tree
+
+Notes: dfs check false cases (!p or !q) !vals equal etc. then dfs on right and left
+
+```cpp
+// O(N) Time
+// O(1) Space
+
+class Solution {
+public:
+    bool isSameTree(TreeNode* p, TreeNode* q) { 
+        return dfs(p, q);
+    }
+
+    bool dfs(TreeNode* p, TreeNode* q){
+        if(!p and !q) return true;
+        if(!p or !q) return false;
+        if(p->val != q->val) return false;
+        return dfs(p->left, q->left) and dfs(p->right, q->right);
+    }
+};
+```
+
+## 572. Subtree of Another Tree
+
+Notes: isSameTree + dfs until root and subroot vals match if(root->val == subRoot->val and isSameTree(root, subRoot)) return true;
+
+```cpp
+//O(N*M) Time
+//O(1) Space
+
+class Solution {
+public:
+    bool isSubtree(TreeNode* root, TreeNode* subRoot) {
+        return dfs(root, subRoot);
+    }
+    bool dfs(TreeNode* root, TreeNode* subRoot){
+        if(!root) return false;
+        if(root->val == subRoot->val and isSameTree(root, subRoot)) return true;
+        return dfs(root->left, subRoot) or dfs(root->right, subRoot);
+    }
+    bool isSameTree(TreeNode* p, TreeNode* q){
+        if(!p and !q) return true;
+        if(!p or !q) return false;
+        if(p->val != q->val) return false;
+        return isSameTree(p->left, q->left) and isSameTree(p->right, q->right);
+    }
+};
+
+//O(N) Solution is serializing the tree and seeing if the subroot string is in pos:
+bool isSubtree(TreeNode* root, TreeNode* subRoot) {
+    string rootStr = serialize(root);
+    string subRootStr = serialize(subRoot);
+    
+    return rootStr.find(subRootStr) != string::npos;
+}
+
+string serialize(TreeNode* node) {
+    if (!node)
+        return "null";
+    
+    return "#" + to_string(node->val) + " " + serialize(node->left) + " " + serialize(node->right);
+}
 ```

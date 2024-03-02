@@ -1,3 +1,49 @@
+## 3/1 977. Squares of a Sorted Array
+
+```cpp
+class Solution {
+public:
+    vector<int> sortedSquares(vector<int>& nums) {
+        vector<int> result(nums.size());
+        int left = 0, right = nums.size() - 1;
+        for(int i = nums.size() - 1; i >= 0; i--){
+            if(abs(nums[left]) > abs(nums[right])){
+                result[i] = nums[left] * nums[left];
+                left++;
+            }
+            else{ //right greater
+                result[i] = nums[right] * nums[right];
+                right--;
+            }
+        }
+        return result;
+    }
+};
+```
+
+## 2/29 2864. Maximum Odd Binary Number
+
+```cpp
+class Solution {
+public:
+    string maximumOddBinaryNumber(string s) {
+        int ones = 0;
+        for(auto c : s) if (c == '1') ones++;
+        if(ones == 1) return string(s.size() - 1, '0') + "1";
+        
+        string str = string(s.size() - 1, '0') + "1";
+        ones--;
+        int i = 0;
+        while(ones > 0){
+            str[i] = '1';
+            i++;
+            ones--;
+        }
+        return str;  
+    }
+};
+```
+
 ## 2/28 1609. Even Odd Tree
 
 ```cpp
