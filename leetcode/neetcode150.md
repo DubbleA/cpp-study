@@ -1454,7 +1454,7 @@ Notes: swap(root->right, root->left), dfs(left), dfs(right)
 
 ```cpp
 //O(N) Time
-//O(1) Space
+//O(h) Space where h is the height of the tree.
 
 class Solution {
 public:
@@ -1477,7 +1477,7 @@ Notes: dfs() rightHeight = dfs(root->right) + 1; leftHeight = dfs(root->left) + 
 
 ```cpp
 //O(N) Time
-//O(1) Space
+//O(h) Space where h is the height of the tree.
 
 class Solution {
 public:
@@ -1500,7 +1500,7 @@ Notes: left & right = dfs(root->dir, width), width = max(width, left + right), r
 
 ```cpp
 // O(N) Time
-// O(1) Space
+// O(h) Space where h is the height of the tree.
 
 class Solution {
 public:
@@ -1528,7 +1528,7 @@ Notes: dfs height, modify to return -1 if (rHeight/lHeight == -1 or abs(rHeight 
 
 ```cpp
 //O(N) Time
-//O(1) Space
+//O(h) Space where h is the height of the tree.
 class Solution {
 public:
     bool isBalanced(TreeNode* root) {
@@ -1553,7 +1553,7 @@ Notes: dfs check false cases (!p or !q) !vals equal etc. then dfs on right and l
 
 ```cpp
 // O(N) Time
-// O(1) Space
+// O(h) Space where h is the height of the tree.
 
 class Solution {
 public:
@@ -1576,7 +1576,7 @@ Notes: isSameTree + dfs until root and subroot vals match if(root->val == subRoo
 
 ```cpp
 //O(N*M) Time
-//O(1) Space
+//O(h) Space where h is the height of the tree.
 
 class Solution {
 public:
@@ -1610,4 +1610,176 @@ string serialize(TreeNode* node) {
     
     return "#" + to_string(node->val) + " " + serialize(node->left) + " " + serialize(node->right);
 }
+```
+
+## 235. Lowest Common Ancestor of a Binary Search Tree
+
+Notes: return when root leq max(pval, qval) and geq min(pval, qval)
+
+```cpp 
+//O(N) Time
+//O(h) Space where h is the height of the tree.
+
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        return dfs(root, p, q);
+    }
+    TreeNode* dfs(TreeNode* root, TreeNode* p, TreeNode* q){
+        if(!root) return nullptr;
+        //we want to be inbetween p and q
+        if(root->val <= max(p->val, q->val) and root->val >= min(p->val, q->val)) return root;
+        else if(root->val < q->val and root->val < p->val) return dfs(root->right, p, q);
+        return dfs(root->left, p, q); //ancestor in left
+    }
+};
+```
+
+## 102. Binary Tree Level Order Traversal
+
+Notes: dfs with 2d vector passed by reference to keep track of values. if index (height) == size of 2d vector push back blank vector. then dfs left, right
+
+```cpp
+//O(N) Time
+//O(N) for storing the output. The space required for the recursion stack is O(h), where h is the height of the tree.
+
+class Solution {
+public:
+    vector<vector<int>> levelOrder(TreeNode* root) {
+        vector<vector<int>> levels;
+        dfs(root, levels, 0);
+        return levels;
+    }
+
+    void dfs(TreeNode* root, vector<vector<int>>& levels, int height){
+        if(!root) return;
+        if(height == levels.size()) levels.push_back({});
+        levels[height].emplace_back(root->val);
+        dfs(root->left, levels, height + 1);
+        dfs(root->right, levels, height + 1);
+    }
+};
+```
+
+## 199. Binary Tree Right Side View
+
+Notes: level order traversal but just return last val in each level of vector
+
+```cpp
+//O(N) Time
+//O(N) for storing the output. The space required for the recursion stack is O(h), where h is the height of the tree.
+
+class Solution {
+public:
+    vector<int> rightSideView(TreeNode* root) {
+        vector<vector<int>> levels;
+        dfs(root, levels, 0);
+        vector<int> res;
+        for(auto& v : levels) res.push_back(v.back());
+        return res;
+    }
+    void dfs(TreeNode* root, vector<vector<int>>& levels, int height){
+        if(!root) return;
+        if(levels.size() == height) levels.push_back({});
+        levels[height].emplace_back(root->val);
+        dfs(root->left, levels, height + 1);
+        dfs(root->right, levels, height + 1);
+    }
+};
+```
+
+## 1448. Count Good Nodes in Binary Tree
+
+Notes: dfs (root, prevMax, int& goodNodes)
+
+```cpp
+//O(N) Time
+//O(h) Space
+class Solution {
+public:
+    int goodNodes(TreeNode* root) {
+        int goodNodes = 0;
+        dfs(root, INT_MIN, goodNodes);
+        return goodNodes;
+    }
+
+    void dfs(TreeNode* root, int prevMax, int& goodNodes){
+        if(!root) return;
+        if(root->val >= prevMax){
+            goodNodes++;
+        }
+        prevMax = max(prevMax, root->val);
+        dfs(root->left, prevMax, goodNodes);
+        dfs(root->right, prevMax, goodNodes);
+    }
+};
+```
+
+## 98. Validate Binary Search Tree
+
+Notes: return dfs(root->left, lVal, root->val) and dfs(root->right, root->val, rVal);
+
+```cpp
+//O(N) Time
+//O(h) Space
+
+class Solution {
+public:
+    bool isValidBST(TreeNode* root) {
+        return dfs(root, LONG_MIN, LONG_MAX);
+    }
+    bool dfs(TreeNode* root, long long lVal, long long rVal){
+        if(!root) return true;
+        if(lVal >= root->val or root->val >= rVal) return false;
+        return dfs(root->left, lVal, root->val) and dfs(root->right, root->val, rVal);
+    }
+};
+```
+
+## 230. Kth Smallest Element in a BST
+
+Notes: inorder dfs. dfs left, process root, dfs right
+
+```cpp
+//O(Nlogk) Time
+//O(N) Space
+class Solution {
+public:
+    int kthSmallest(TreeNode* root, int k) {
+        priority_queue<int, vector<int>, greater<>> pq;
+        queue<TreeNode*> q;
+        q.push(root);
+
+        while(!q.empty()){
+            auto node = q.front(); q.pop();
+            if(!node) continue;
+            pq.emplace(node->val);
+            q.emplace(node->left);
+            q.emplace(node->right);
+        }
+
+        while(--k) pq.pop();
+
+        return pq.top();
+    }
+};
+
+// could u give me a O(N) sol?
+
+class Solution {
+public:
+    int kthSmallest(TreeNode* root, int k) {
+        vector<int> levels;
+        dfs(root, levels, k);
+        return levels.back();
+    }
+    void dfs(TreeNode* root, vector<int>& levels, int k){
+        if(!root) return;
+        //inorder traversal
+        dfs(root->left, levels, k);
+        if(levels.size() == k) return;
+        levels.emplace_back(root->val);
+        dfs(root->right, levels, k);
+    }
+};
 ```

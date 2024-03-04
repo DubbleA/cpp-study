@@ -1,3 +1,71 @@
+## 3/3 948. Bag of Tokens
+
+```cpp
+class Solution {
+public:
+    int bagOfTokensScore(vector<int>& tokens, int power) {
+        sort(tokens.begin(), tokens.end());
+
+        int score = 0;
+        int left = 0, right = tokens.size() - 1;
+
+        while(left <= right){
+            //play lowest card
+            if(power >= tokens[left]){
+                power -= tokens[left];
+                score++;
+                left++;
+            }
+            //we need power use most score
+            else if(score > 0 and left < right){
+                score--;
+                power += tokens[right];
+                right--;
+            }
+            //cooked
+            else break;
+        }
+        return score;
+    }
+};
+```
+
+## 3/2 19. Remove Nth Node From End of List
+
+```cpp
+// O(N) Time
+// O(1) Space
+
+class Solution {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        //slow fast method for n stops
+
+        //first get a lead of size n with right pointer
+        ListNode* right = head;
+        for(int i = 0; i < n; ++i){
+            right = right->next;
+        }
+        //if right is null then remove end of list
+        if(!right) return head->next;
+        ListNode* prev = nullptr;
+        ListNode* left = head;
+
+        //iterate one by one until end
+        while(right){
+            prev = left;
+            left = left->next;
+            right = right->next;
+        }
+
+        //skip nth node
+        if(prev and left) prev->next = left->next;
+        
+        return head;
+    }
+};
+```
+
 ## 3/1 977. Squares of a Sorted Array
 
 ```cpp
