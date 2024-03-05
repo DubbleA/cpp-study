@@ -1783,3 +1783,145 @@ public:
     }
 };
 ```
+
+## Tries
+
+## Heap/Priority Queue
+
+### 703. Kth Largest Element in a Stream
+
+Notes: pq<greater> of size k, return top (pop if pq size > k)
+
+```cpp
+// O(nlogn) time
+// O(k) space
+
+class KthLargest {
+public:
+    priority_queue<int, vector<int>, greater<>> pq;
+    int k;
+    KthLargest(int k, vector<int>& nums) : pq(nums.begin(), nums.end()), k(k) {
+        while(pq.size() > k) pq.pop();
+    }
+    
+    int add(int val) {
+        pq.emplace(val); 
+        if(pq.size() > k) pq.pop();
+        return pq.top();
+    }
+};
+```
+
+### 1046. Last Stone Weight
+
+Notes: pq regular while pq.size() > 1
+
+```cpp
+// nlogn time
+// n space
+
+class Solution {
+public:
+    int lastStoneWeight(vector<int>& stones) {
+        priority_queue<int> pq(stones.begin(), stones.end());
+        while(pq.size() > 1){
+            auto x = pq.top(); pq.pop();
+            auto y = pq.top(); pq.pop();
+            pq.emplace(abs(x-y));
+        }
+        return pq.top();
+    }
+};
+```
+
+### 973. K Closest Points to Origin
+
+Notes: using T = tuple<double, int, int>; //distance, x, y. pq<T> of size k
+
+```cpp
+// nlognk time
+// k space
+
+class Solution {
+    using T = tuple<double, int, int>; //distance, x, y
+public:
+    vector<vector<int>> kClosest(vector<vector<int>>& points, int k) {
+        priority_queue<T> pq; //maxHeap which will be size k
+        for(auto point : points) {
+            double distance = sqrt(point[0] * point[0] + point[1] * point[1]);
+            pq.emplace(distance, point[0], point[1]);
+            if(pq.size() > k) pq.pop();
+        }
+        vector<vector<int>> res;
+        while(!pq.empty()){
+            auto [_, x, y] = pq.top(); pq.pop();
+            res.push_back({x, y});
+        }
+
+        return res;
+    }
+};
+```
+
+### 215. Kth Largest Element in an Array
+
+Notes: minheap using greater<> 
+
+```cpp
+//nlogn time
+//n space
+class Solution {
+public:
+    int findKthLargest(vector<int>& nums, int k) {
+        //minheap
+        priority_queue<int, vector<int>, greater<>> pq (nums.begin(), nums.end());
+        while(pq.size() > k) pq.pop();
+        return pq.top();
+    }
+};
+```
+
+### 621. Task Scheduler 
+
+Notes: freqMap, maxheap pq<int freq>, queue<<int freq, int time>> while(!pq or !q empty): if(!pq) if freq > 1 q.emplace(--freq, time + n). if(!q) if timestamp == time, pq.emplace(curFreq) q.pop()
+
+```cpp
+// Time Complexity: O(TlogU) where T is the # tasks and U is # of unique tasks
+// Space Complexity O(T + U)
+
+class Solution {
+public:
+    int leastInterval(vector<char>& tasks, int n) {
+        map<char, int> m; 
+        for(auto& c: tasks) m[c]++; //freqMap
+
+        //maxheap for frequency (we want most freq to get processed first)
+        priority_queue<int> pq; 
+        queue<pair<int,int>> q; //freq, time
+
+        //we dont need char val, each value in pq is a char
+        for(auto [_, freq] : m) pq.emplace(freq); 
+
+        int time = 0;
+        while(!pq.empty() or !q.empty()){
+            ++time;
+            if(!pq.empty()){
+                auto freq = pq.top(); pq.pop();
+                if(freq > 1) { //doesnt make to process freq 0 nodes
+                    q.emplace(--freq, time + n);
+                }
+            }
+            if(!q.empty()){
+                auto [curFreq, timeStamp] = q.front();
+                if(timeStamp == time){
+                    pq.emplace(curFreq);
+                    q.pop();
+                } 
+            }
+        }
+        
+        return time;
+    }
+};
+```
+
