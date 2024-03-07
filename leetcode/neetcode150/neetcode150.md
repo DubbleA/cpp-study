@@ -1784,9 +1784,9 @@ public:
 };
 ```
 
-## Tries
+# Tries
 
-## Heap/Priority Queue
+# Heap/Priority Queue
 
 ### 703. Kth Largest Element in a Stream
 
@@ -1925,3 +1925,106 @@ public:
 };
 ```
 
+# Backtracking
+
+## 78. Subsets
+
+Notes: in backtrack, #1 push back curr vector to result. #2 for loop i = start #3 curr.p_b(n[i]) #4 backtrack i + 1 #5 curr.pop_back()
+
+```cpp
+// O(N * 2^N) Time to generate all subsets and copy to output list
+// O(N * 2^N) Space to store all subsets
+
+class Solution {
+public:
+    vector<vector<int>> subsets(vector<int>& nums) {
+        vector<vector<int>> result;
+        vector<int> curr;
+        backtrack(result, curr, 0, nums);
+        return result;
+    }
+
+    void backtrack(vector<vector<int>>& result, vector<int>& curr, int idx, vector<int>& nums){
+        //push back immediately
+        result.push_back(curr);
+        for(int i = idx; i < nums.size(); ++i){
+            //push back number
+            curr.push_back(nums[i]);
+            //run dfs style backtrack
+            backtrack(result, curr, i + 1, nums);
+            //delete last addition before moving onto next number
+            curr.pop_back();
+        }
+    }
+};
+```
+
+## 39. Combination Sum
+
+Notes: backtrack: if csum > target return; if(csum == target) add curr vec to res and return; for(int i = start) 1. curr.add c[i], 2. backtrack(i as start bc we want duplicates), 3. curr.pop_back()
+
+```cpp
+// O(N ^ (T/M + 1)) Time where T is target value, M is the minimum value among candidates
+// O(T/M) Space
+
+class Solution {
+public:
+    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {
+        vector<vector<int>> result;
+        vector<int> curr;
+        backtrack(result, curr, 0, 0, candidates, target);
+        return result;
+    }
+
+    void backtrack(vector<vector<int>>& result, vector<int>& curr, int start, int cSum, vector<int>& candidates, int target){
+        if(cSum > target) return;
+        if(cSum == target) {
+            result.emplace_back(curr);
+            return;
+        }
+        for(int i = start; i < candidates.size(); ++i){
+            curr.emplace_back(candidates[i]);
+            backtrack(result, curr, i, cSum + candidates[i], candidates, target);
+            curr.pop_back();
+        }
+    }
+};
+```
+
+## 46. Permutations
+
+Notes: backtrack, but instead of passing in int start, pass in vector<visited>. for i (0, n) if(!visited) visited = 1, curr.add n[i], backtrack, curr.pop, visited = 0
+
+```cpp
+//O(n!) time
+//O(n * n!) space
+
+class Solution {
+public:
+    vector<vector<int>> permute(vector<int>& nums) {
+        vector<vector<int>> res;
+        vector<int> curr;
+        vector<int> visited (nums.size(), 0);
+        backtrack(res, curr, visited, nums);
+        return res;
+    }
+
+    void backtrack(vector<vector<int>>& res, vector<int>& curr, vector<int>& visited, vector<int>& nums){
+        if(curr.size() == nums.size()) {
+            res.emplace_back(curr);
+            return;
+        }
+        for(int i = 0; i < nums.size(); ++i){
+            if(visited[i] == 0){
+                visited[i] = 1;
+                curr.emplace_back(nums[i]);
+                backtrack(res, curr, visited, nums);
+                curr.pop_back();
+                visited[i] = 0;
+            }
+        }
+    }
+};
+```
+
+# Graphs

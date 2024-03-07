@@ -1,3 +1,40 @@
+## 3/6 876. Middle of the Linked List
+
+```cpp
+class Solution {
+public:
+    ListNode* middleNode(ListNode* head) {
+        ListNode* slow = head;
+        ListNode* fast = head;
+        while(fast and fast->next){
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        return slow;
+    }
+};
+```
+
+## 3/5 141. Linked List Cycle
+
+```cpp
+// O(N) Space
+// O(1) Time
+class Solution {
+public:
+    bool hasCycle(ListNode *head) {
+        ListNode* slow = head;
+        ListNode* fast = head;
+        while(fast and fast->next){
+            slow = slow->next;
+            fast = fast->next->next;
+            if(slow == fast) return true;
+        }
+        return false;
+    }
+};
+```
+
 ## 3/4 1750. Minimum Length of String After Deleting Similar Ends
 
 ```cpp

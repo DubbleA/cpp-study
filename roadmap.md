@@ -42,12 +42,16 @@ struct any{
 ### Thesis?
 -  if the O2 optimization / 50% memory fragmentation optimization hurdle would be a good topic.
 - do automatic memory reclamation for multithreaded code
+- there's a lib called crossbeam they have it implemented (rust)
 - https://github.com/microsoft/snmalloc
 - https://github.com/DanielLiamAnderson/atomic_shared_ptr
 - https://dl.acm.org/doi/10.1145/3519939.3523730
 - https://dl.acm.org/doi/10.1145/3558481.3591102
 - https://dl.acm.org/doi/10.1145/3627535.3638491
 - https://stackoverflow.com/questions/11546075/is-optimisation-level-o3-dangerous-in-g
+- cuz slow
+best one is prob epoch based
+or Interval based but thats too new and not popular yet
 
 
 ### CUDA Study
@@ -104,7 +108,7 @@ Not asking the disco every time
 
 Accessing ssd/s and disks 
 
-Thing called a page table, (process using virtual memory)  looks at page table and finds a way to find the corresponding physical memory 
+Thing called a page table, (process using virtual memory)looks at page table and finds a way to find the corresponding physical memory 
 
 Bits of virtual physical memory
 
@@ -249,6 +253,8 @@ Essentially there are three calls that go on in the hardware to fetch the locati
 - waterloo convex optimization stuff https://ucalendar.uwaterloo.ca/2324/COURSE/course-CO.html
 - waterloo optimization class https://wwkong.github.io/files/notes/co255_CouseNotes_W14.pdf
 - ipad list 
+- cool drawing video https://www.youtube.com/watch?v=247cXLkYt2M
+- hedge fund shit at 6 min https://www.youtube.com/watch?v=gTNJXVmuRRA
 
 ### Random:
 - Compiler course at waterloo https://student.cs.uwaterloo.ca/~cs444/
@@ -260,7 +266,13 @@ Essentially there are three calls that go on in the hardware to fetch the locati
 - Trivia: just sort stackoverflow by cpp20 and cpp17 tagged qs
 - Cornell phd compiler self guided course https://www.cs.cornell.edu/courses/cs6120/2023fa/self-guided/
 - oop notes https://github.com/clayton-halim/cs246e-notes/blob/master/Notes/problem_13.md
+- github repo of c++ features https://github.com/AnthonyCalandra/modern-cpp-features#coroutines
+- networking: https://gaia.cs.umass.edu/kurose_ross/online_lectures.htm, https://open.umn.edu/opentextbooks/textbooks/771 (haven't read this one but seems good), and then project is: implement tcp over udp and maybe a routing algo but that's just dijkstras
+- basic OS: https://pages.cs.wisc.edu/~remzi/OSTEP/, https://cs341.cs.illinois.edu/coursebook/index.html
 
+- drw final is often implement mutex toss in some super basic computer systems: understand how mutexes/synchronization primitives work, how the cache works, how file systems work, and how memory works. file system/memory is covered by the uiuc link i sent above for basic OS pretty well imo
 
+- https://cseweb.ucsd.edu/classes/fa05/cse120/lectures/120-l5.pdf implementing mutexes, and i think uiuc stuff also covers using mutexes to implement e.g. semaphores but might not
+and caches: https://lwn.net/Articles/250967/
 
-
+specifically https://lwn.net/Articles/252125/ and https://lwn.net/Articles/255364/
