@@ -2028,3 +2028,109 @@ public:
 ```
 
 # Graphs
+
+## 200. Number of Islands
+
+Notes: dfs left right up down
+
+```cpp
+// O(R * C) Time (rows x cols)
+// O(R * C) Space (call stack during recursion)
+
+class Solution {
+public:
+    int numIslands(vector<vector<char>>& grid) {
+        int numIslands = 0;
+        for(int i = 0; i < grid.size(); ++i){
+            for(int j = 0; j < grid[0].size(); ++j){
+                if(grid[i][j] == '1'){
+                    dfs(grid, i, j);
+                    numIslands++;
+                }
+            }
+        }
+        return numIslands;
+    }
+
+    void dfs(vector<vector<char>>& grid, int i, int j){
+        if(i < 0 or i >= grid.size() or j < 0 or j >= grid[0].size()) return;
+        if(grid[i][j] != '1') return;
+        grid[i][j] = '0';
+        dfs(grid, i + 1, j);
+        dfs(grid, i - 1, j);
+        dfs(grid, i, j + 1);
+        dfs(grid, i, j - 1);
+    }
+};
+```
+
+## 133. Clone Graph
+
+Notes: similar to deep copy of linked list, two pass (dfs to copy in map first pass, update neighbors in second pass)
+
+```cpp
+// O(V+E): Where V # vertices (nodes) and E is # edges (connections)
+// O(V) Space
+
+class Solution {
+public:
+    Node* cloneGraph(Node* node) {
+        unordered_map<Node*, Node*> copyMap;
+        dfs(node, copyMap);
+        return copyMap[node];
+        
+    }
+    void dfs(Node* node, unordered_map<Node*, Node*>& copyMap){
+        if (!node) return;
+        if (copyMap.find(node) == copyMap.end()) {
+            copyMap[node] = new Node(node->val);
+            // first pass to clone all nodes (similar to link list)
+            for (auto neighbor : node->neighbors) {
+                dfs(neighbor, copyMap); // Ensure neighbor is cloned
+            }
+            //second pass to add all nodes
+            for (auto neighbor : node->neighbors) {
+                // Now add the cloned neighbors to the cloned node's neighbors
+                copyMap[node]->neighbors.emplace_back(copyMap[neighbor]);
+            }
+        }
+    }
+
+};
+```
+
+## 695. Max Area of Island
+
+Notes: num islands but keep int curr size
+
+```cpp
+// O(R * C) Time (rows x cols)
+// O(R * C) Space (call stack during recursion)
+
+class Solution {
+public:
+    int maxAreaOfIsland(vector<vector<int>>& grid) {
+        int maxArea = 0;
+        for(int i = 0; i < grid.size(); ++i){
+            for(int j = 0; j < grid[0].size(); ++j){
+                if(grid[i][j] == 1) {
+                    int cMax = 0;
+                    dfs(grid, i, j, cMax);
+                    maxArea = max(maxArea, cMax);
+                }
+            }
+        }
+        return maxArea;
+    }
+    void dfs(vector<vector<int>>& grid, int i, int j, int& curr){
+        if(i < 0 or i >= grid.size() or j < 0 or j >= grid[0].size()) return;
+        if(grid[i][j] != 1) return;
+        curr++;
+        grid[i][j] = 0; // mark as visited
+        dfs(grid, i + 1, j, curr);
+        dfs(grid, i - 1, j, curr);
+        dfs(grid, i, j + 1, curr);
+        dfs(grid, i, j - 1, curr);
+    }
+};
+```

@@ -1,3 +1,22 @@
+## 3/7 3005. Count Elements With Maximum Frequency
+
+```cpp
+class Solution {
+public:
+    int maxFrequencyElements(vector<int>& nums) {
+        map<int, int> m; 
+        int maxFreq = 1;
+        for(auto& n : nums) {
+            m[n]++;
+            maxFreq = max(maxFreq, m[n]);
+        }
+        int res = 0;
+        for(auto [k, f] : m) if(f == maxFreq) res += f;
+        return res;
+    }
+};
+```
+
 ## 3/6 876. Middle of the Linked List
 
 ```cpp
