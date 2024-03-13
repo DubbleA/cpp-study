@@ -1,3 +1,122 @@
+## 3/12 2485. Find the Pivot Integer
+
+```cpp
+class Solution {
+public:
+    int pivotInteger(int n) {
+        int l = 1, r = n;
+
+        int csum = 0, tsum = 0;
+        for(int i = 1; i <= n; ++i) tsum += i;
+
+        while(l <= r){
+            csum += l;
+            if(csum == tsum) return l;
+            tsum -= l;
+            l++;
+        }
+
+        return -1;
+    }
+};
+```
+
+## 3/11 1171. Remove Zero Sum Consecutive Nodes from Linked List
+
+```cpp
+class Solution {
+public:
+    ListNode* removeZeroSumSublists(ListNode* head) {
+        //This solution first goes through the list 
+        //to record the latest node for each cumulative sum.
+        // Then, it traverses the list again, using the map 
+        //to skip over any nodes that are part of a zero-sum 
+        //sequence, effectively removing them by adjusting the next pointers.
+        ListNode* dummy = new ListNode(0, head);
+        ListNode* curr = dummy;
+        unordered_map<int, ListNode*> prefixSumMap;
+        prefixSumMap[0] = curr;
+        
+        int sum = 0;
+        // Calculate the prefix sum for each node and add to the hashmap
+        // Duplicate prefix sum values will be replaced
+        while (curr) {
+            sum += curr->val;
+            prefixSumMap[sum] = curr;
+            curr = curr->next;
+        }
+
+        curr = dummy;
+        sum = 0;
+        // Delete zero sum consecutive sequences 
+        // by setting node before sequence to node after
+        while (curr) {
+            sum += curr->val;
+            curr->next = prefixSumMap[sum]->next;
+            curr = curr->next;
+        }
+        
+        ListNode* res = dummy->next;
+        delete dummy; // Clean up dummy node
+        return res;
+    }
+};
+```
+
+## 3/10 791. Custom Sort String
+
+```cpp
+class Solution {
+public:
+    string customSortString(string order, string s) {
+        map<char, int> m; 
+        for(char c : s) m[c]++;
+        string res;
+        for(char c : order){
+            res.append(m[c], c); // Append the character c, freq[c] times
+            m[c] = 0; // Set the frequency to 0 to mark it as processed
+        }
+        for(auto [ch, freq] : m){
+            res.append(freq, ch);
+        }
+        return res;
+    }
+};
+```
+
+## 3/9 349. Intersection of Two Arrays
+
+```cpp
+class Solution {
+public:
+    vector<int> intersection(vector<int>& nums1, vector<int>& nums2) {
+        unordered_set<int> n1 (nums1.begin(), nums1.end()), n2 (nums2.begin(), nums2.end());
+        vector<int> res;
+        for(const auto& n : n1) if(n2.find(n) != n2.end()) res.emplace_back(n);
+        return res;
+    }
+};
+```
+
+## 3/8 2540. Minimum Common Value
+
+```cpp
+class Solution {
+public:
+    int getCommon(vector<int>& nums1, vector<int>& nums2) {
+        int n1 = 0, n2 = 0;
+        int n1len = nums1.size(), n2len = nums2.size();
+
+        while(n1 < n1len and n2 < n2len){
+            if(nums1[n1] == nums2[n2]) return nums1[n1];
+            else if(nums1[n1] < nums2[n2]) n1++;
+            else if(nums1[n1] > nums2[n2]) n2++;
+        }
+        return -1;
+    }
+};
+```
+
 ## 3/7 3005. Count Elements With Maximum Frequency
 
 ```cpp
@@ -11,6 +130,7 @@ public:
             maxFreq = max(maxFreq, m[n]);
         }
         int res = 0;
+        it wa
         for(auto [k, f] : m) if(f == maxFreq) res += f;
         return res;
     }

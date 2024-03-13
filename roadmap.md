@@ -52,6 +52,7 @@ struct any{
 - cuz slow
 best one is prob epoch based
 or Interval based but thats too new and not popular yet
+- could be a cool paper idea https://stackoverflow.com/questions/56404500/real-world-performance-of-red-black-vs-2-3-4-trees-especially-considering-cach
 
 
 ### CUDA Study
@@ -276,3 +277,15 @@ Essentially there are three calls that go on in the hardware to fetch the locati
 and caches: https://lwn.net/Articles/250967/
 
 specifically https://lwn.net/Articles/252125/ and https://lwn.net/Articles/255364/
+
+- https://github.com/codecrafters-io/build-your-own-x
+- Reduced compile time by switching to type erasure
+
+- https://davekilian.com/cpp-type-erasure.html
+- https://freyja.dev/posts/rust-erased-trait-parameters/ 
+
+- https://youtu.be/iMzEUdacznQ?si=LuYX_M-SVXbFvEca
+
+- https://www.reddit.com/r/cpp/comments/1amxl7g/nvidia_senior_position_interview_question/?share_id=yV1dwsGjwts9cOT3ui2wG&utm_content=1&utm_medium=ios_app&utm_name=ioscss&utm_source=share&utm_term=1
+
+- malloc

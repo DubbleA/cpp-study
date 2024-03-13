@@ -2134,3 +2134,47 @@ public:
     }
 };
 ```
+
+## 417. Pacific Atlantic Water Flow
+
+Notes: 2 dfs's Pacific and Atlantic. Vector bools for each to mark as visited. if(heights[i][j] < prev) return.
+
+```cpp
+// O(R * C) Time
+// O(R * C) Space
+
+class Solution {
+public:
+    vector<vector<int>> pacificAtlantic(vector<vector<int>>& heights) {
+        vector<vector<bool>> pacific (heights.size(), vector<bool> (heights[0].size(), false));
+        vector<vector<bool>> atlantic (heights.size(), vector<bool> (heights[0].size(), false));
+        for(int i = 0; i < heights.size(); ++i){ // left and right
+            dfs(i, 0, INT_MIN, pacific, heights);
+            dfs(i, heights[0].size() - 1, INT_MIN, atlantic, heights);
+        }
+
+        for(int j = 0; j < heights[0].size(); ++j){ // top and bottom
+            dfs(0, j, INT_MIN, pacific, heights);
+            dfs(heights.size() - 1, j, INT_MIN, atlantic, heights);
+        }
+        vector<vector<int>> res;
+        for(int i = 0; i < heights.size(); ++i){
+            for(int j = 0; j < heights[0].size(); ++j){
+                if(atlantic[i][j] and pacific[i][j]) res.push_back({i, j});
+            }
+        }
+        return res;
+    }
+
+    void dfs(int i, int j, int prev, vector<vector<bool>>& valid, vector<vector<int>>& heights){
+        if(i < 0 or j < 0 or i >= heights.size() or j >= heights[0].size()) return;
+        if(valid[i][j]) return; // alr visited
+        if(heights[i][j] < prev) return;
+        valid[i][j] = true;
+        dfs(i + 1, j, heights[i][j], valid, heights);
+        dfs(i - 1, j, heights[i][j], valid, heights);
+        dfs(i, j + 1, heights[i][j], valid, heights);
+        dfs(i, j - 1, heights[i][j], valid, heights);
+    }
+};
+```
