@@ -2178,3 +2178,86 @@ public:
     }
 };
 ```
+
+## 130. Surrounded Regions
+
+Notes: 1st pass dfs on edges of rectangle to convert all O's to Y's (unvisitable). then in second for loop turn all Y's back to O's and any surviving O's into X's
+
+```cpp
+// O(n*m) time
+// O(n*m) space
+class Solution {
+public:
+    void solve(vector<vector<char>>& board) {
+        //take all the o's on the edge and turn them into y's
+        for(int i = 0; i < board.size(); ++i){
+            for(int j = 0; j < board[0].size(); ++j){
+                if(i == 0 or i == board.size() - 1 or j == 0 or j == board[0].size() - 1){
+                    if(board[i][j] == 'O') dfs(i, j, board);
+                }
+            }
+        }
+
+        //all nodes marked at this point are unsurroundable. so unmarked nodes can be X'd
+
+        for(int i = 0; i < board.size(); ++i){
+            for(int j = 0; j < board[0].size(); ++j){
+                if(board[i][j] == 'O') board[i][j] = 'X';
+                else if(board[i][j] == 'Y') board[i][j] = 'O';
+            }
+        }
+
+    }
+    void dfs(int i, int j, vector<vector<char>>& board){
+        if(i < 0 or j < 0 or i >= board.size() or j >= board[0].size()) return;
+        if(board[i][j] != 'O') return; //visited
+        board[i][j] = 'Y';
+        dfs(i + 1, j, board);
+        dfs(i - 1, j, board);
+        dfs(i, j + 1, board);
+        dfs(i, j - 1, board);
+    }
+};
+```
+
+## 994. Rotting Oranges
+
+Notes: BFS using T = i, j, time. first pass for loop if grid[i][j] == 2, add 4 dirs to q. else if 1 inc fresh count. do bfs and inc max time. return fresh == 0 ? maxTime : -1; 
+
+```cpp
+class Solution {
+public:
+    using T = tuple<int, int, int>; //time, i, j
+    int orangesRotting(vector<vector<int>>& grid) {
+        queue<T> q; 
+        int fresh = 0;
+        for(int i = 0; i < grid.size(); ++i){
+            for(int j = 0; j < grid[0].size(); ++j){
+                if(grid[i][j] == 2){
+                    //put neighbors in queue at time 0
+                    q.emplace(i + 1, j, 0);
+                    q.emplace(i - 1, j, 0);
+                    q.emplace(i, j + 1, 0);
+                    q.emplace(i, j - 1, 0);
+                }
+                else if(grid[i][j] == 1) fresh++;
+            }
+        }
+        int maxTime = 0;
+        while(!q.empty()){
+            auto [i, j, time] = q.front(); q.pop();
+            if(i < 0 or j < 0 or i >= grid.size() or j >= grid[0].size()) continue;
+            if(grid[i][j] != 1) continue; //we have no fresh orange to process
+            grid[i][j] = 2; // mark as rotten
+            fresh--;
+            maxTime = max(maxTime, time + 1);
+            q.emplace(i + 1, j, time + 1);
+            q.emplace(i - 1, j, time + 1);
+            q.emplace(i, j + 1, time + 1);
+            q.emplace(i, j - 1, time + 1);
+        }
+        return fresh == 0 ? maxTime : -1;
+    }
+};
+```
+

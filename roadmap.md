@@ -44,6 +44,7 @@ struct any{
 - do automatic memory reclamation for multithreaded code
 - there's a lib called crossbeam they have it implemented (rust)
 - https://github.com/microsoft/snmalloc
+so jus
 - https://github.com/DanielLiamAnderson/atomic_shared_ptr
 - https://dl.acm.org/doi/10.1145/3519939.3523730
 - https://dl.acm.org/doi/10.1145/3558481.3591102
@@ -289,3 +290,9 @@ specifically https://lwn.net/Articles/252125/ and https://lwn.net/Articles/25536
 - https://www.reddit.com/r/cpp/comments/1amxl7g/nvidia_senior_position_interview_question/?share_id=yV1dwsGjwts9cOT3ui2wG&utm_content=1&utm_medium=ios_app&utm_name=ioscss&utm_source=share&utm_term=1
 
 - malloc
+
+- build your own https://github.com/codecrafters-io/build-your-own-x
+
+- c++ weekly series https://www.youtube.com/watch?v=EJtqHLvAIZE&list=PLs3KjaCtOwSZ2tbuV1hx8Xz-rFZTan2J1&index=1 this entire series pretty goated
+
+- https://www.youtube.com/watch?v=VpqwCDSfgz0 nvm i am completely cooked
