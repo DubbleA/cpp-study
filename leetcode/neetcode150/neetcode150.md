@@ -1446,6 +1446,142 @@ public:
 };
 ```
 
+## 146. LRU Cache
+
+Notes: 
+setup: Node struct, private: capacity, size, Node* head, tail, map<key, Node*>, move_to_front and remove_tail functions
+
+get: if not in map return -1; else move to front and return m[key]->val
+put: if(m[key] in map) update key value pair and move to front. else if max capacity remove tail and erase from map. then create new node as new head
+
+```cpp
+//O(1) Time
+//O(N) Space
+
+struct Node{
+    int key;
+    int val;
+    Node* prev;
+    Node* next;
+};
+
+class LRUCache {
+private: 
+    int capacity;
+    int size;
+    Node* head;
+    Node* tail;
+    std::unordered_map<int, Node*> map;
+
+public:
+    LRUCache(int capacity) : capacity(capacity), size(0), head(nullptr), tail(nullptr) {}
+    
+    int get(int key) {
+        if(map.find(key) == map.end()) return -1;
+        Node* node = map[key];
+        move_to_front(node);
+        return node->val;
+    }
+    
+    void put(int key, int value) {
+        //update key value pair and move to front
+        if(map.find(key) != map.end()){
+            Node* node = map[key];
+            node->val = value;
+            move_to_front(node);
+            return;
+        }
+        if(size == capacity){
+            map.erase(tail->key);
+            remove_tail();
+            --size;
+        }
+
+        Node* newNode = new Node{key, value, nullptr, head}; //key, val, prev, next
+        if(!head and !tail) tail = newNode;
+        else head->prev = newNode;
+        head = newNode;
+
+        map[key] = newNode;
+        ++size;
+    }
+
+    void move_to_front(Node* node){
+        //already at front
+        if(node == head) return;
+
+        //disconnect node from list
+        node->prev->next = node->next;
+        //update prev value
+        if(node->next) node->next->prev = node->prev;
+        //if node is the tail then move tail back one
+        if(node == tail) tail = node->prev;
+
+        //move node to front;
+        node->prev = nullptr;
+        node->next = head;
+        head->prev = node;
+        head = node;
+    }
+
+    void remove_tail(){
+        if(!tail) return;
+
+        //if only one node is present
+        if(tail == head){
+            delete tail;
+            head = nullptr;
+            tail = nullptr;
+            return;
+        }
+        Node* temp = tail;
+        tail = tail->prev;
+        tail->next = nullptr;
+        delete temp;
+    }
+};
+```
+
+## 23. Merge k Sorted Lists
+
+Notes: m2s + for loop merge lists 1 at a time. optimized soln is using pq + custom comparator
+
+```cpp
+//O(N*k) Time where N is number of nodes k is # of lists
+//O(1) Space
+
+class Solution {
+public:
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+        ListNode* dummy = new ListNode();
+        dummy = dummy->next;
+        for(auto l : lists){
+            if(!l) continue;
+            dummy = m2s(dummy, l);
+        }
+        return dummy;
+    }
+    ListNode* m2s(ListNode* l1, ListNode* l2){
+        ListNode* dummy = new ListNode(0);
+        ListNode* head = dummy;
+        while(l1 && l2){
+            if(l1->val <= l2->val){
+                head->next = l1;
+                l1 = l1->next;
+            }
+            else{
+                head->next = l2;
+                l2 = l2->next;
+            }
+            head = head->next;
+        }
+        if(l1) head->next = l1;
+        if(l2) head->next = l2;
+        return dummy->next;
+    }
+};
+```
+
 # Trees
 
 ## 226. Invert Binary Tree
