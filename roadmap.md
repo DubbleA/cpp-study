@@ -37,6 +37,7 @@ struct any{
 - std::shared_ptr
 - std::unique_ptr
 - std::any
+- std::function
 - https://github.com/igalakhov/compile-time-newton
 
 ### Thesis?
@@ -54,6 +55,11 @@ so jus
 best one is prob epoch based
 or Interval based but thats too new and not popular yet
 - could be a cool paper idea https://stackoverflow.com/questions/56404500/real-world-performance-of-red-black-vs-2-3-4-trees-especially-considering-cach
+- maybe read: The art of multiprocessor programming
+Treiber stack (original paper)
+Hazard pointers (memory reclamation)
+Treiber stack with hazard pointers for memory reclamation
+https://csng.cs.toronto.edu/publication_files/0000/0159/jpdc07.pdf
 
 
 ### CUDA Study
@@ -296,3 +302,4 @@ specifically https://lwn.net/Articles/252125/ and https://lwn.net/Articles/25536
 - c++ weekly series https://www.youtube.com/watch?v=EJtqHLvAIZE&list=PLs3KjaCtOwSZ2tbuV1hx8Xz-rFZTan2J1&index=1 this entire series pretty goated
 
 - https://www.youtube.com/watch?v=VpqwCDSfgz0 nvm i am completely cooked
+- SIMD hardware hpc shit https://en.algorithmica.org/hpc/

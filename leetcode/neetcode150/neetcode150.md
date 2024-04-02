@@ -1582,6 +1582,113 @@ public:
 };
 ```
 
+## 
+
+Notes:
+```
+while curr
+    container of stacks of size k
+    if stack.size() == k push to container
+    anything not pushed to container pushed to leftovers
+
+for stack in container
+    reverse stack on main linked list
+
+append leftovers to end of list
+```
+
+```cpp
+// O(N) Time
+// O(N) Space
+
+class Solution {
+public:
+    ListNode* reverseKGroup(ListNode* head, int k) {
+        
+        vector<vector<int>> container;
+        vector<int> stack;
+        ListNode* curr = head;
+        while(curr){
+            stack.emplace_back(curr->val);
+            curr = curr->next;
+            if(stack.size() == k){
+                container.emplace_back(stack);
+                stack.clear(); //clear stack
+            }
+        }
+
+        ListNode* dummy = new ListNode(0);
+        curr = dummy;
+
+        for(auto& st : container){
+            for(int i = st.size() - 1; i >= 0; --i){
+                curr->next = new ListNode(st[i]);
+                curr = curr->next;
+            }
+        }
+        
+        for(int i = 0; i < stack.size(); ++i) {
+            curr->next = new ListNode(stack[i]);
+            curr = curr->next;
+        }
+
+        return dummy->next;
+
+    }
+};
+```
+
+Follow up: O(1) Space?
+
+```cpp
+class Solution {
+public:
+    ListNode* reverseKGroup(ListNode* head, int k) {
+        ListNode* dummy = new ListNode(0);
+        dummy->next = head;
+        ListNode* prevGroupTail = dummy;
+
+        while(head) {
+            ListNode* groupStart = head;
+            ListNode* groupEnd = getGroupEnd(head, k);
+
+            if(!groupEnd) break; //remaining nodes are less than k so no need to reverse
+
+            ListNode* nextGroupStart = groupEnd->next;
+            groupEnd->next = nullptr; //separate the group to be reversed
+
+            //Reverse the group
+            prevGroupTail->next = reverseList(groupStart);
+            groupStart->next = nextGroupStart;
+
+            prevGroupTail = groupStart;
+            head = nextGroupStart;
+        }
+        return dummy->next;
+
+    }
+    ListNode* getGroupEnd(ListNode* head, int k){
+        while(head && k > 1){
+            head = head->next;
+            k--;
+        }
+        return head;
+    }
+    ListNode* reverseList(ListNode* head){
+        ListNode* prev = nullptr;
+        ListNode* curr = head;
+
+        while(curr){
+            ListNode* temp = curr->next;
+            curr->next = prev;
+            prev = curr;
+            curr = temp;
+        }
+        return prev;
+    }
+};
+```
+
 # Trees
 
 ## 226. Invert Binary Tree
@@ -1917,6 +2024,48 @@ public:
         levels.emplace_back(root->val);
         dfs(root->right, levels, k);
     }
+};
+```
+
+## 105. Construct Binary Tree from Preorder and Inorder Traversal
+
+Notes: 
+
+preorder ALWAYS has the node first. But you don't know the size of either branch.
+inorder ALWAYS has the left branch to the left of the node, and right branch right of the node. So now you know the size of each branch.
+Take those information and break the arrays into subproblems, based on the size.
+```
+def buildTree(self, preorder, inorder):
+    if inorder:
+        ind = inorder.index(preorder.pop(0))
+        root = TreeNode(inorder[ind])
+        root.left = self.buildTree(preorder, inorder[0:ind])
+        root.right = self.buildTree(preorder, inorder[ind+1:])
+        return root
+```
+
+```cpp
+// O(N^2) Time
+// O(N) Space
+class Solution {
+public:
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        int rootIndex = 0;
+        return arrayToTree(preorder, inorder, rootIndex, 0, inorder.size() - 1);
+    }
+
+    TreeNode* arrayToTree(vector<int>& preorder, vector<int>& inorder, int& rootIndex, int left, int right){
+        if(left > right) return nullptr;
+        int pivot = left;
+
+        while(preorder[rootIndex] != inorder[pivot]) pivot++;
+        TreeNode* newNode = new TreeNode(preorder[rootIndex]);
+        ++rootIndex;
+        newNode->left = arrayToTree(preorder, inorder, rootIndex, left, pivot-1);
+        newNode->right = arrayToTree(preorder, inorder, rootIndex, pivot+1, right);
+        return newNode;
+    }
+
 };
 ```
 

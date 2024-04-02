@@ -1,3 +1,15 @@
+## 4/1 58. Length of Last Word
+
+```cpp
+class Solution {
+public:
+    int lengthOfLastWord(string s) {
+        s.erase(s.find_last_not_of(" \n\r\t")+1);
+        return s.substr(s.find_last_of(" ") + 1 ).size();
+    }
+};
+```
+
 ## 3/12 2485. Find the Pivot Integer
 
 ```cpp
