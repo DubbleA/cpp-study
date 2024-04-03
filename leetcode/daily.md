@@ -1,3 +1,83 @@
+## 4/3 79. Word Search
+
+```cpp
+// O(M×N×L) Time where MxN is the board dimensions and L is length of the word
+// O(L + K) Space where L is the recursive call stack and K for the length of the trie
+
+struct TrieNode {
+    unordered_map<char, TrieNode*> children;
+    bool end;
+    string word;
+    TrieNode() : end(false), word("") {}
+};
+
+class Solution {
+public:
+    TrieNode* root = new TrieNode();
+
+    void insert(const string& word){
+        TrieNode* temp = root;
+        for(const auto& c : word){
+            if(temp->children.find(c) == temp->children.end()){
+                temp->children[c] = new TrieNode();
+            }
+            temp = temp->children[c]; //iterate to next node
+        }
+        temp->end = true;
+        temp->word = word;
+    }
+
+    void dfs(vector<vector<char>>& board, int i, int j, TrieNode* curr, bool& ans){
+        if(ans) return;
+        if(i < 0 or i >= board.size() or j < 0 or j >= board[0].size()) return;
+        if(board[i][j] == '#' or curr->children.find(board[i][j]) == curr->children.end()) return;
+        char c = board[i][j];
+        curr = curr->children[c];
+        if(curr->end){
+            ans = true;
+            return;
+        }
+        board[i][j] = '#';
+        dfs(board, i + 1, j, curr, ans);
+        dfs(board, i - 1, j, curr, ans);
+        dfs(board, i, j + 1, curr, ans);
+        dfs(board, i, j - 1, curr, ans);
+        board[i][j] = c; //backtrack
+    }
+
+
+    bool exist(vector<vector<char>>& board, string word) {
+        insert(word);
+        bool ans = false;
+        for(int i = 0; i < board.size(); ++i){
+            for(int j = 0; j < board[0].size(); ++j){
+                dfs(board, i, j, root, ans);
+                if(ans) return true;
+            }
+        }
+        return false;
+    }
+};
+```
+
+## 4/2 205. Isomorphic Strings
+
+```cpp
+class Solution {
+public:
+    bool isIsomorphic(string s, string t) {
+        unordered_map<char, char> sMap,tMap;
+        for(int i = 0; i < s.size(); ++i){
+            if(sMap[s[i]] and sMap[s[i]] != t[i]) return false;
+            if(tMap[t[i]] and tMap[t[i]] != s[i]) return false;
+            sMap[s[i]] = t[i];
+            tMap[t[i]] = s[i];
+        }
+        return true;
+    }
+};
+```
+
 ## 4/1 58. Length of Last Word
 
 ```cpp

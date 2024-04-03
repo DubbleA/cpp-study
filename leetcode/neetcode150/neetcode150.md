@@ -2069,7 +2069,200 @@ public:
 };
 ```
 
+## 124. Binary Tree Maximum Path Sum
+
+Notes:
+```
+case 1: left_max + Node
+case 2: right_max + Node
+case 3: just the Node
+curMax = max(c1, c2, c3)
+case 4: left_max + Node + right_max
+result = max(res, curMax, case4)
+return curMax
+```
+
+```cpp
+//O(N) Time
+//O(N) Space
+
+class Solution {
+public:
+    int maxPathSum(TreeNode* root) {
+        int result = INT_MIN;
+        dfs(root, result);
+        return result;
+    }
+
+    int dfs(TreeNode* root, int& result) {
+        if(!root) return 0;
+        int leftMax = dfs(root->left, result);
+        int rightMax = dfs(root->right, result);
+        int currentMax = max(leftMax + root->val ,max(rightMax + root->val, root->val));
+        result = max(result, max(currentMax, root->val + rightMax + leftMax));
+        // Return the maximum path sum from the current node to either left or right child
+        return currentMax;
+    }
+};
+```
+
+## 297. Serialize and Deserialize Binary Tree
+
+Notes: 
+```
+serialize: 
+if(!root) return "null,"
+return to_string(root->val) , s(left) + s(right)
+
+deserialize:
+for c in data: if char == ',' push s to q, else s+=c
+
+makeTree:
+s = q.front()
+t* = new TreeNode(stoi(s));
+t->right & t->left = makeTree(q)
+```
+
+```cpp
+// O(N) Time
+// O(N) Space
+
+class Codec {
+public:
+
+    // Encodes a tree to a single string.
+    string serialize(TreeNode* root) {
+        if(!root) return "null,";
+        return to_string(root->val) + "," + serialize(root->left) + serialize(root->right);
+    }
+
+    // Decodes your encoded data to tree.
+    TreeNode* deserialize(string data) {
+        queue<string> q;
+        string s = "";
+        for(const char& c : data){
+            if(c == ',') {
+                q.emplace(s);
+                s.clear();
+            }
+            else s += c;
+        }
+        return makeTree(q);
+    }
+
+    TreeNode* makeTree(queue<string>& q){
+        string s = q.front(); q.pop();
+        if(s == "null") return nullptr;
+        TreeNode* t = new TreeNode(stoi(s));
+        t->left = makeTree(q);
+        t->right = makeTree(q);
+        return t;
+    }
+};
+```
+
 # Tries
+
+## 208. Implement Trie (Prefix Tree)
+
+Notes: custom TrieNode (map<char, TN*> children, bool end, string word). insert function to create trie. two forloops to iterate to see if you find your prefix/word.
+
+```cpp
+// O(L) Time (length of word)
+// O(N * L) Space (# of words * length)
+
+struct TrieNode {
+    unordered_map<char, TrieNode*> children;
+    bool end;
+    string word;
+    TrieNode() : end(false), word("") {}
+};
+class Trie {
+public:
+    TrieNode* root = new TrieNode();
+    
+    void insert(string word) {
+        TrieNode* temp = root;
+        for(const auto& c : word){
+            if(temp->children.find(c) == temp->children.end()){
+                temp->children[c] = new TrieNode();
+            }
+            temp = temp->children[c]; //iterate to next node
+        }
+        temp->end = true;
+        temp->word = word;
+    }
+    
+    bool search(string word) {
+        TrieNode* temp = root;
+        for(int i = 0; i < word.size(); ++i){
+            if(temp->children.find(word[i]) == temp->children.end()) return false;
+            temp = temp->children[word[i]];
+        }
+        return temp->end;  // Return whether the current node marks the end of a word
+    }
+    
+    bool startsWith(string prefix) {
+        TrieNode* temp = root;
+        for(int i = 0; i < prefix.size(); ++i){
+            if(temp->children.find(prefix[i]) == temp->children.end()) return false;
+            temp = temp->children[prefix[i]];
+        }
+        return true; // All characters found, return true
+    }
+};
+```
+
+## 211. Design Add and Search Words Data Structure
+
+Notes: default TrieNode struct setup + dfs for search. If its a dot use for loop to dfs check all children, else proceed as normal. 
+
+```cpp
+// O(L) Time
+// O(N * L) Space (# of words in dict * length of words)
+struct TrieNode {
+    unordered_map<char, TrieNode*> children;
+    bool end;
+    string word;
+    TrieNode() : end(false), word("") {}
+};
+
+class WordDictionary {
+public:
+    TrieNode* root = new TrieNode();
+
+    void addWord(string word) {
+        TrieNode* temp = root;
+        for(const auto& c : word) {
+            if(temp->children.find(c) == temp->children.end()){
+                temp->children[c] = new TrieNode();
+            }
+            temp = temp->children[c];
+        }
+        temp->end = true;
+        temp->word = word;
+    }
+    
+    bool search(string word) {
+        TrieNode* temp = root;
+        return dfs(word, temp, 0);
+    }
+    bool dfs(const string& word, TrieNode* curr, int i){
+        if(i == word.size()) return curr->end;
+        char c = word[i];
+        if(c != '.'){ //proceed as regular
+            if(curr->children.find(c) == curr->children.end()) return false;
+            return dfs(word, curr->children[c], i + 1);
+        }
+        else{ //its a dot check all children
+            for(const auto [_, node] : curr->children){
+                if(dfs(word, node, i + 1)) return true;
+            }
+        }
+        return false; // no match found
+    }
+};
+```
 
 # Heap/Priority Queue
 

@@ -268,6 +268,7 @@ Essentially there are three calls that go on in the hardware to fetch the locati
 - Compiler course at waterloo https://student.cs.uwaterloo.ca/~cs444/
 - Algorithms class at cornell https://www.cs.cornell.edu/courses/cs6820/2023fa/lectures.html
 - perf engineering class MIT playlist https://youtube.com/playlist?list=PLUl4u3cNGP63VIBQVWguXxZZi0566y7Wf&si=hnk-ZJmcOX37PNXI
+- https://ocw.mit.edu/courses/6-172-performance-engineering-of-software-systems-fall-2018/
 - competitive programming handbook - https://cses.fi/book/book.pdf
 - kleinberg for algos https://www.cs.princeton.edu/~wayne/kleinberg-tardos/
 - Options, Futures, and Other Derivatives - John C. Hull
