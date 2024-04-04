@@ -2403,6 +2403,49 @@ public:
 };
 ```
 
+## 355. Design Twitter
+
+Notes: pq<tuple<time, tweetId, userId>>, map<followerId, set<followeeId>>, int time;
+
+```cpp
+// O(nlogn) time
+// O(N) Space
+ 
+class Twitter {
+    using T = tuple<int, int, int>; // time, tweetId, userId
+public:
+    unordered_map<int, unordered_set<int>> m; //maps followerId -> followeeID
+    priority_queue<T> pq; // time, tweetId, userId
+    int time; // Global timestamp
+    Twitter() : time(0) {}
+    
+    void postTweet(int userId, int tweetId) {
+        pq.emplace(++time, tweetId, userId);
+    }
+    
+    vector<int> getNewsFeed(int userId) {
+        vector<int> result;
+        priority_queue<T> feed = pq;
+        while(!feed.empty() and result.size() < 10){
+            auto [time, tweetId, userPosted] = feed.top(); feed.pop();
+            if(m[userId].find(userPosted) != m[userId].end() or userId == userPosted){
+                result.emplace_back(tweetId);
+            }
+            if(result.size() == 10) return result;
+        }
+        return result;
+    }
+    
+    void follow(int followerId, int followeeId) {
+        m[followerId].emplace(followeeId);
+    }
+    
+    void unfollow(int followerId, int followeeId) {
+        m[followerId].erase(followeeId);
+    }
+};
+```
+
 # Backtracking
 
 ## 78. Subsets

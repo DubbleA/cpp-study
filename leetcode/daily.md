@@ -1,3 +1,21 @@
+## 1614. Maximum Nesting Depth of the Parentheses
+
+```cpp
+class Solution {
+public:
+    int maxDepth(string s) {
+        int maxLeft = 0;
+        int curLeft = 0;
+        for(auto c : s){
+            if(c == '(') curLeft++;
+            else if(c == ')') curLeft--;
+            maxLeft = max(maxLeft, curLeft);
+        }
+        return maxLeft;
+    }
+};
+```
+
 ## 4/3 79. Word Search
 
 ```cpp
