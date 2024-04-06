@@ -1,4 +1,59 @@
-## 1614. Maximum Nesting Depth of the Parentheses
+## 1249. Minimum Remove to Make Valid Parentheses
+
+```cpp
+class Solution {
+public:
+    string minRemoveToMakeValid(string s) {
+        stack<pair<char, int>> stack;
+        int i = 0;
+        while(i < s.size()){
+            if(s[i] == ')'){
+                if(stack.empty()){
+                    s.erase(i, 1);
+                    continue;
+                }
+                auto [paren, _] = stack.top();
+                if(paren == '(') stack.pop();
+                else s.erase(i, 1);
+            }
+            else if (s[i] == '(') stack.emplace(s[i], i);
+            ++i;
+        }
+        while(!stack.empty()){
+            auto [_, index] = stack.top(); stack.pop();
+            s.erase(index, 1);
+        }   
+        return s;
+    }
+};
+```
+
+## 4/5 1544. Make The String Great
+
+```cpp
+class Solution {
+public:
+    bool good(char a, char b){
+        return (tolower(a) == tolower(b) && (isupper(a) != isupper(b)));
+    }
+    string makeGood(string s) {
+        int i = 0;
+        while(i < s.size() - 1){
+            if(s.empty()) return "";
+            if(good(s[i], s[i+1])){
+                // Directly erase the current and next character
+                s.erase(i, 2);
+                //step back one to check if we can process the new adjacent
+                if(i > 0) --i;
+            }
+            else ++i;
+        }
+        return s;
+    }
+};
+```
+
+## 4/4 1614. Maximum Nesting Depth of the Parentheses
 
 ```cpp
 class Solution {

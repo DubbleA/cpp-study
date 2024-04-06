@@ -2446,6 +2446,65 @@ public:
 };
 ```
 
+## 295. Find Median from Data Stream
+
+Notes: 2 pq: maxheap for leftside, minheap for rightSide. when you add rebalance pqs otherwise return top of each to get the median
+
+```cpp
+// O(logn), O(1) Time
+// O(n) Space
+
+class MedianFinder {
+public:
+    priority_queue<int> leftheap; //maxheap
+    priority_queue<int, vector<int>, greater<>> rightheap; //minheap
+
+    /*
+    we want larger numbers on right side (min heap) where top is smallest
+    smaller numbers on left side (max heap) where the top is our largest
+    */
+    
+    void addNum(int num) {
+        if(leftheap.empty()){
+            leftheap.emplace(num);
+            return;
+        }
+        if(leftheap.top() <= num) rightheap.emplace(num);
+        else leftheap.emplace(num);
+
+        if(leftheap.size() < rightheap.size()){
+            leftheap.emplace(rightheap.top()); rightheap.pop();
+        }
+        if(leftheap.size() - rightheap.size() > 1) {
+            rightheap.emplace(leftheap.top()); leftheap.pop();
+        }
+
+    }
+    
+    double findMedian() {
+        if((leftheap.size() + rightheap.size()) % 2 == 0){
+            return (leftheap.top() + rightheap.top()) / 2.0;
+        }
+        return leftheap.top();
+    }
+};
+```
+
+single pass approach (not as intuitive)
+
+```cpp
+void addNum(int num) {
+    maxHeap.push(num);
+    minHeap.push(maxHeap.top());
+    maxHeap.pop();
+
+    if(minHeap.size() > maxHeap.size()){
+        maxHeap.push(minHeap.top());
+        minHeap.pop();
+    }
+}
+```
+
 # Backtracking
 
 ## 78. Subsets
@@ -2543,6 +2602,256 @@ public:
                 curr.pop_back();
                 visited[i] = 0;
             }
+        }
+    }
+};
+```
+
+## 90. Subsets II
+
+Notes: default backtrack setup to skip duplicate elems with 
+
+if (i != start && nums[i] == nums[i - 1]) continue;
+
+```cpp
+// O(n * 2^n) Time
+// O(n) Space
+
+class Solution {
+public:
+    vector<vector<int>> subsetsWithDup(vector<int>& nums) {
+        vector<vector<int>> result;
+        vector<int> curr;
+        sort(nums.begin(), nums.end());
+        backtrack(result, nums, curr, 0);
+        return result;
+    }
+
+    void backtrack(vector<vector<int>>& result, vector<int>& nums, vector<int>& curr, int start){
+        result.emplace_back(curr);
+        for(int i = start; i < nums.size(); ++i){
+            // If the current element is a duplicate, ignore.
+            if (i != start && nums[i] == nums[i - 1]) {
+                continue;
+            }
+            curr.emplace_back(nums[i]);
+            backtrack(result, nums, curr, i + 1);
+            curr.pop_back();
+        }
+    }
+
+};
+```
+
+## 40. Combination Sum II
+
+Notes: default backtrack setup with duplicate check `if(i != start && candidates[i]==candidates[i-1]) continue;`
+
+```cpp
+// Time Complexity: O(2^n), In the worst case, we generate all possible combinations
+// O(N) Space
+
+class Solution {
+public:
+    vector<vector<int>> combinationSum2(vector<int>& candidates, int target) {
+        vector<vector<int>> result;
+        vector<int> curr;
+        sort(candidates.begin(), candidates.end());
+        dfs(result, curr, candidates, 0, 0, target);
+        return result;
+    }
+
+    void dfs(vector<vector<int>>& result, vector<int>& curr, vector<int>& candidates, int start, int cSum, int target){
+        if(cSum > target) return;
+        if(cSum == target) {
+            result.emplace_back(curr);
+            return;
+        }
+
+        for(int i = start; i < candidates.size(); ++i){
+            //to avoid picking up the same combnations i.e. 
+            //we don't pick same element for certain kth position of a combination 
+            if(i != start && candidates[i]==candidates[i-1]) continue;
+            curr.emplace_back(candidates[i]);
+            dfs(result, curr, candidates, i + 1, cSum + candidates[i], target);
+            curr.pop_back();
+        }
+    }   
+};
+```
+
+## 79. Word Search
+
+Notes: TrieNode setup + dfs
+
+```cpp
+// Building the Trie: O(L), where L is the length of the word.
+// Searching in the grid: O(M * N * 4^L), where M is the number of rows, 
+// N is the number of columns in the board, and L is the length of the word. 
+// In the worst case, for each cell, we explore all four directions, and the 
+// depth of exploration is bounded by the length of the word.
+// So, the overall time complexity is O(L + M * N * 4^L).
+
+// O(L) Space
+
+struct TrieNode {
+    unordered_map<char, TrieNode*> children;
+    string word;
+    bool end;
+    TrieNode() : word(""), end(false) {}
+};
+
+class Solution {
+public:
+    TrieNode* root = new TrieNode();
+
+    void insert(const string& word){
+        TrieNode* temp = root;
+        for(const auto& c : word){
+            if(temp->children.find(c) == temp->children.end()){
+                temp->children[c] = new TrieNode();
+            }
+            temp = temp->children[c];
+        }
+        temp->end = true;
+        temp->word = word;
+    }
+
+    void dfs(vector<vector<char>>& board, int i, int j, TrieNode* curr, bool& ans){
+        if(i < 0 or i >= board.size() or j < 0 or j >= board[0].size()) return;
+        if(board[i][j] == '#' or ans) return;
+
+        char c = board[i][j];
+        if(curr->children.find(c) == curr->children.end()) return; // not valid
+
+        board[i][j] = '#';
+        curr = curr->children[c];
+        if(curr->end){
+            ans = true;
+            return;
+        }
+
+        dfs(board, i + 1, j, curr, ans);
+        dfs(board, i - 1, j, curr, ans);
+        dfs(board, i, j + 1, curr, ans);
+        dfs(board, i, j - 1, curr, ans);
+        board[i][j] = c;
+    }
+
+    bool exist(vector<vector<char>>& board, string word) {
+        insert(word);
+        TrieNode* temp = root;
+        bool ans = false;
+        for(int i = 0; i < board.size(); ++i){
+            for(int j = 0; j < board[0].size(); ++j){
+                if(temp->children.find(board[i][j]) != temp->children.end()){
+                    dfs(board, i, j, temp, ans);
+                    if(ans) return ans;
+                }
+            }
+        }
+        return ans;
+    }
+};
+```
+
+## 131. Palindrome Partitioning
+
+Notes: std backtrack except in for loop maintain temp string char by char
+
+```
+temp += s[i];
+if(isPalindrome(temp)){
+    curr.push_back(temp);
+    dfs(res, curr, i + 1, s);
+    curr.pop_back();
+}
+```
+
+```cpp
+// O(N * 2^N) Time
+// O(N) Space
+
+class Solution {
+public:
+    vector<vector<string>> partition(string s) {
+        vector<vector<string>> res;
+        vector<string> curr;
+        dfs(res, curr, 0, s);
+        return res;
+    }
+
+    void dfs(vector<vector<string>>& res, vector<string>& curr, int start, string& s){
+        if(start == s.size()) {
+            res.emplace_back(curr);
+            return;
+        }
+        string temp = "";
+        for(int i = start; i < s.size(); ++i){
+            temp += s[i];
+            if(isPalindrome(temp)){
+                curr.push_back(temp);
+                dfs(res, curr, i + 1, s);
+                curr.pop_back();
+            }
+        }
+    }
+    bool isPalindrome(const string& s){
+        string rev = s;
+        reverse(rev.begin(), rev.end());
+        return s == rev;
+    }
+};
+```
+
+## 17. Letter Combinations of a Phone Number
+
+Notes: standard backtrack setup + map to map char ['x'] = {"x", "y", "z"}; then in dfs `vector<string> temp = m[digits[start]];` and loop on each index
+
+```
+for(const auto& str : temp){
+    curr += str;
+    dfs(result, curr, m, digits, start + 1);
+    curr.pop_back();
+}
+```
+
+```cpp
+// Time Complexity: O(4^N * N) where 4 comes from in the worst case, 
+// each digit maps to 4 letters, and we have 4 choices at each step.
+
+// O(N) Space
+class Solution {
+public:
+    vector<string> letterCombinations(string digits) {
+        if(digits.empty()) return {};
+        unordered_map<char, vector<string>> m;
+        m['2'] = {"a", "b", "c"};
+        m['3'] = {"d", "e", "f"};
+        m['4'] = {"g", "h", "i"};
+        m['5'] = {"j", "k", "l"};
+        m['6'] = {"m", "n", "o"};
+        m['7'] = {"p", "q", "r", "s"};
+        m['8'] = {"t", "u", "v"};
+        m['9'] = {"w", "x", "y", "z"};
+
+        vector<string> result;
+        string curr = "";
+        dfs(result, curr, m, digits, 0);
+        return result;
+    }
+
+    void dfs(vector<string>& result, string curr, unordered_map<char, vector<string>>& m, string& digits, int start){
+        if(curr.size() == digits.size()){
+            result.emplace_back(curr);
+            return;
+        } 
+
+        vector<string> temp = m[digits[start]];
+        for(const auto& str : temp){
+            curr += str;
+            dfs(result, curr, m, digits, start + 1);
+            curr.pop_back();
         }
     }
 };

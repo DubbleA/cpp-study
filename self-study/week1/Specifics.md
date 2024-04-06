@@ -57,3 +57,25 @@ auto main() -> int
 our `magic_static_ref()` fucntion returns a cached reference to this variable s. Here the compiler has completely eliminated all of these calls to magic_static_ref().size() because it knows there are no side affects to those calls. so we do not have to pay to access the variable created by our static function. 
 
 What do we do with this? ehhh just something to be aware of if working with static variables that we access a lot. 
+
+
+# Episode 7: Stop Using std::endl
+
+```cpp
+int main()
+{
+    std::cout << "Hello World" << std::endl;
+    //std::endl is the same as 
+    std::cout << "Hello World" << '\n' << std::flush;
+
+    //we dont actually need the std::flush every time
+    //its faster to do 
+    std::cout << "Hello World" << '\n';
+}
+```
+
+instead of a string `"\n"` we should be sending a single character `'\n'` bc in theory it should be more efficient. if you send an ostream operator a string its going to have to loop over all the characters of the string looking for null and then stop when its done. if its just a single character it knows it has only one thing to do. 
+
+there is no real point in repeatedly using `std::endl` because if you wanted your file to be flushed you could just do `std::flush` once at the end. 
+
+# Episode 8: C++ Name Demangling
