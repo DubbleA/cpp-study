@@ -78,4 +78,3 @@ instead of a string `"\n"` we should be sending a single character `'\n'` bc in 
 
 there is no real point in repeatedly using `std::endl` because if you wanted your file to be flushed you could just do `std::flush` once at the end. 
 
-# Episode 8: C++ Name Demangling

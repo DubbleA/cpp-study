@@ -1,3 +1,21 @@
+## 678. Valid Parenthesis String
+
+```cpp
+class Solution {
+public:
+    bool checkValidString(string s) {
+        int unmatchedLeft = 0, rightNeeded = 0;
+        for(char c : s){
+            if(c == '(') unmatchedLeft++, rightNeeded++;
+            else if(c == ')') rightNeeded--, unmatchedLeft = max(unmatchedLeft-1,0);
+            else if(c == '*') rightNeeded++, unmatchedLeft = max(unmatchedLeft-1,0);
+            if(rightNeeded < 0) return false; //found extra right parenthesis
+        }
+        return unmatchedLeft == 0;
+    }
+};
+```
+
 ## 1249. Minimum Remove to Make Valid Parentheses
 
 ```cpp
