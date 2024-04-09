@@ -1,4 +1,22 @@
-## 678. Valid Parenthesis String
+## 4/8 1700. Number of Students Unable to Eat Lunch
+
+```cpp
+class Solution {
+public:
+    int countStudents(vector<int>& students, vector<int>& sandwiches) {
+        map<int, int> freqmap;
+        for(auto n : students) freqmap[n]++;
+
+        for(int i = 0; i < sandwiches.size(); ++i){
+            if(freqmap[sandwiches[i]] == 0) return sandwiches.size() - i;
+            freqmap[sandwiches[i]]--;
+        }
+        return 0;
+    }
+};
+```
+
+## 4/7 678. Valid Parenthesis String
 
 ```cpp
 class Solution {
@@ -16,7 +34,7 @@ public:
 };
 ```
 
-## 1249. Minimum Remove to Make Valid Parentheses
+## 4/6 1249. Minimum Remove to Make Valid Parentheses
 
 ```cpp
 class Solution {
