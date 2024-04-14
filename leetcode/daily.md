@@ -1,3 +1,91 @@
+## 4/14 404. Sum of Left Leaves
+
+```cpp
+class Solution {
+public:
+    int sumOfLeftLeaves(TreeNode* root) {
+        int res = 0;
+        dfs(root, res);
+        return res;
+    }
+    void dfs(TreeNode* root, int& csum){
+        if(!root) return;
+        if(root->left) {
+            if(!root->left->left and !root->left->right) csum += root->left->val;
+        }
+        dfs(root->left, csum);
+        dfs(root->right, csum);
+    }
+};
+```
+
+## 4/12 42. Trapping Rain Water
+
+```cpp
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int i = 0, j = height.size() - 1, result = 0;
+        int maxLeft = height[i], maxRight = height[j];
+
+        while(i < j){
+            if(maxLeft <= maxRight){
+                maxLeft = max(maxLeft, height[++i]);
+                result += maxLeft - height[i];
+            }
+            else{
+                maxRight = max(maxRight, height[--j]);
+                result += maxRight - height[j];
+            }
+        }
+        return result;
+    }
+};
+```
+
+## 4/10 950. Reveal Cards In Increasing Order
+
+```cpp
+class Solution {
+public:
+    vector<int> deckRevealedIncreasing(vector<int>& deck) {
+        priority_queue<int> pq (deck.begin(), deck.end());
+        vector<int> res;
+        res.emplace_back(pq.top()); pq.pop();
+
+        //put last index first then put new value at the top
+        while(!pq.empty()){
+            res.insert(res.begin(), res.back());
+            res.pop_back();
+            res.insert(res.begin(), pq.top()); pq.pop();
+        }
+
+        return res;
+    }
+};
+```
+
+## 4/9 2073. Time Needed to Buy Tickets
+
+```cpp
+class Solution {
+public:
+    int timeRequiredToBuy(vector<int>& tickets, int k) {
+        int pivot = tickets[k];
+        int total = 0;
+        for(int i = 0; i < tickets.size(); ++i){
+            if(i <= k){
+                total += min(tickets[i], tickets[k]);
+            }
+            else{
+                total += min(tickets[i], tickets[k] - 1);
+            }
+        }
+        return total;
+    }
+};
+```
+
 ## 4/8 1700. Number of Students Unable to Eat Lunch
 
 ```cpp

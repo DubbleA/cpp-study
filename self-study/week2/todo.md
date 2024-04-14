@@ -13,7 +13,7 @@ Features:
 - Ep 16 Avoiding std::bind 10M
 - Ep 17 C++17 std::invoke 10M
 - Ep 18 C++17 constexpr if + special edition ep 15M
-- Ep 20 C++ 17 fold expressions 10M
+- Ep 20 C++17 fold expressions 10M
 - Ep 21 C++17 if and switch init statements 10M
 - Ep 22 C++17 Nested Namespaces 5M
 - Ep 23 C++17 __has_include 5M

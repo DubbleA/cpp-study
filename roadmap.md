@@ -60,6 +60,8 @@ Treiber stack (original paper)
 Hazard pointers (memory reclamation)
 Treiber stack with hazard pointers for memory reclamation
 https://csng.cs.toronto.edu/publication_files/0000/0159/jpdc07.pdf
+- explains how you need to structure data diff for gpu https://github.com/zhangshun97/Lock-free-Red-black-tree
+- multi producer / multi consumer queues for concurrent apps. discord uses skiplist
 
 
 ### CUDA Study
