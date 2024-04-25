@@ -1,3 +1,175 @@
+## 4/24 1137. N-th Tribonacci Number
+```cpp 
+class Solution {
+public:
+    int tribonacci(int n) {
+        if(n == 0) return 0;
+        if(n < 3) return 1;
+
+        int head = 0;
+        int one = 1;
+        int two = 1;
+
+        int curr = two;
+        for(int i = 3; i<=n; ++i){
+            int n1 = head;
+            int n2 = one;
+            int n3 = two;
+            curr = n1 + n2 + n3;
+            
+            head = one; 
+            one = two;
+            two = curr;
+        }
+        return curr;
+    }
+};
+```
+
+## 4/19 200. Number of Islands
+
+```cpp
+class Solution {
+public:
+    int numIslands(vector<vector<char>>& grid) {
+        int numIslands = 0;
+        for(int i = 0; i < grid.size(); ++i){
+            for(int j = 0; j < grid[0].size(); ++j){
+                if(grid[i][j] == '1'){
+                    dfs(grid, i, j); 
+                    numIslands++;
+                } 
+            }
+        }
+        return numIslands;
+    }
+    void dfs(vector<vector<char>>& grid, int i, int j){
+        if(i < 0 or j < 0 or i >= grid.size() or j >= grid[0].size()) return;
+        if(grid[i][j] == '0') return;
+        grid[i][j] = '0';
+        dfs(grid, i+1, j);
+        dfs(grid, i-1, j);
+        dfs(grid, i, j+1);
+        dfs(grid, i, j-1);
+    }
+};
+```
+
+## 4/18 463. Island Perimeter
+
+```cpp
+class Solution {
+public:
+    int islandPerimeter(vector<vector<int>>& grid) {
+        int res = 0;
+        for(int i = 0; i < grid.size(); ++i){
+            for(int j = 0; j < grid[0].size(); ++j){
+                if(grid[i][j] == 1){
+                    dfs(grid, i, j, res);
+                    return res;
+                }
+               
+            }
+        }
+        return res;
+    }
+    
+    void dfs(vector<vector<int>>& grid, int i, int j, int& perim){
+        if(i < 0 or j < 0 or i >= grid.size() or j >= grid[0].size()) return;
+        if(grid[i][j] != 1) return;
+        grid[i][j] = 2; //mark visited
+        perim += checkBorder(grid, i, j);
+        cout<<perim<<endl;
+        dfs(grid, i+1, j, perim);
+        dfs(grid, i-1, j, perim);
+        dfs(grid, i, j+1, perim);
+        dfs(grid, i, j-1, perim);
+    }
+    int checkBorder(vector<vector<int>>& grid, int i, int j){
+        int perim = 4;
+        if(i-1 >= 0 and grid[i-1][j] != 0) perim--;
+        if(i+1 < grid.size() and grid[i+1][j] != 0) perim--;
+        if(j-1 >= 0 and grid[i][j-1] != 0) perim--;
+        if(j+1 < grid[0].size() and grid[i][j+1] != 0) perim--;
+        return perim;
+    }
+};
+```
+
+## 4/17 988. Smallest String Starting From Leaf
+
+```cpp
+class Solution {
+public:
+    string smallestFromLeaf(TreeNode* root) {
+        priority_queue<string, vector<string>, greater<>> pq;
+        dfs(root, "", pq); 
+        return pq.top();
+    }
+    void dfs(TreeNode* root, string curr, priority_queue<string, vector<string>, greater<>>& pq){
+        if(!root) return;
+        curr += char(root->val + 'a');
+        if(!root->left and !root->right) {
+            reverse(curr.begin(), curr.end());
+            pq.emplace(curr);
+            return;
+        }
+        dfs(root->left, curr, pq);
+        dfs(root->right, curr, pq);
+    }
+};
+```
+
+## 4/16 623. Add One Row to Tree
+
+```cpp
+class Solution {
+public:
+    TreeNode* addOneRow(TreeNode* root, int val, int depth) {
+        if(depth == 1) return new TreeNode(val, root, nullptr);
+        dfs(root, val, depth);
+        return root;
+    }
+    void dfs(TreeNode* root, int val, int depth){
+        if(!root) return;
+        if(depth == 2){
+
+            TreeNode* leftNode = root->left;
+            TreeNode* rightNode = root->right;
+
+            root->left = new TreeNode(val, leftNode, nullptr);
+            root->right = new TreeNode(val, nullptr, rightNode);
+            
+            return;
+        }
+        dfs(root->left, val, depth - 1);
+        dfs(root->right, val, depth - 1);
+    }
+};
+```
+
+## 4/15 129. Sum Root to Leaf Numbers
+
+```cpp
+class Solution {
+public:
+    int sumNumbers(TreeNode* root) {
+        vector<string> s;
+        dfs(root, s, "");
+        int res = 0;
+        for(auto str : s) res += stoi(str);
+        return res;
+    }
+    void dfs(TreeNode* root, vector<string>& s, string curr){
+        if(!root) return;
+        curr += to_string(root->val);
+        if(!root->left and !root->right) s.emplace_back(curr);
+        dfs(root->left, s, curr);
+        dfs(root->right, s, curr);
+    }
+};
+```
+
 ## 4/14 404. Sum of Left Leaves
 
 ```cpp

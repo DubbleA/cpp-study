@@ -2264,6 +2264,68 @@ public:
 };
 ```
 
+## 212. Word Search II
+
+notes: Default Trie Setup (dfs and if we add word to res vector, mark node->end as false so we dont have duplicates)
+
+```cpp
+// O(M(4*3^L)) Time where M is the # of cells on board and L is length of words
+// O(N) Space
+
+struct TrieNode {
+    map<char, TrieNode*> children;
+    bool end;
+    string word;
+    TrieNode() : end(false), word("") {}
+};
+
+class Solution {
+public:
+    TrieNode* root = new TrieNode();
+
+    void insertWord(const string& word){
+        TrieNode* node = root;
+        for(const auto& c : word){
+            if(node->children.find(c) == node->children.end()){
+                node->children[c] = new TrieNode();
+            }
+            node = node->children[c];
+        }
+        node->word = word;
+        node->end = true;
+    }
+
+    void dfs(vector<vector<char>>& board, TrieNode* curr, int i, int j, vector<string>& res){
+        if(i < 0 or j < 0 or i >= board.size() or j >= board[0].size()) return;
+        if(curr->children.find(board[i][j]) == curr->children.end()) return;
+        char c = board[i][j];
+        board[i][j] = '.';
+        curr = curr->children[c];
+        if(curr->end) {
+            res.emplace_back(curr->word);
+            curr->end = false; //mark as false so we dont duplicate
+        }
+        dfs(board, curr, i + 1, j, res);
+        dfs(board, curr, i - 1, j, res);
+        dfs(board, curr, i, j + 1, res);
+        dfs(board, curr, i, j - 1, res);
+        board[i][j] = c; //backtrack
+    }
+
+    vector<string> findWords(vector<vector<char>>& board, vector<string>& words) {
+        for(const auto& word: words) insertWord(word);
+        vector<string> res;
+        for(int i = 0; i < board.size(); ++i){
+            for(int j = 0; j < board[0].size(); ++j){
+                dfs(board, root, i, j, res);
+            }
+        }
+        return res;
+    }
+};
+```
+
+
 # Heap/Priority Queue
 
 ### 703. Kth Largest Element in a Stream
@@ -2857,6 +2919,48 @@ public:
 };
 ```
 
+## 51. N-Queens
+
+Notes: standard backtrack setup with isValid function to check previous col, top left to curr diag, and curr to top right diag. if row == n we add curr to result vector.
+
+```cpp
+// O(N!) Time
+// O(N^2) Space
+ 
+class Solution {
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        vector<vector<string>> res;
+        vector<string> curr (n, string(n, '.'));
+        dfs(res, curr, 0, n);
+        return res;
+    }
+
+    bool isValid(vector<string>& curr, int row, int col, int n){
+        //check col (dont need to check row bc we process sol row by row)
+        for(int i = 0; i < row; ++i) if(curr[i][col] == 'Q') return false;
+        //check top left to curr diag
+        for(int i = row - 1, j = col - 1; i>=0 and j>=0; --i, --j) if(curr[i][j] == 'Q') return false;
+        //check curr to top right corner diag
+        for(int i = row - 1, j = col + 1; i>=0 and j <n; --i, ++j) if(curr[i][j] == 'Q') return false;
+        return true;
+    }
+
+    void dfs(vector<vector<string>>& res, vector<string>& curr, int row, int n){
+        if(row == n){
+            res.emplace_back(curr); return;
+        }
+        for(int col = 0; col < n; ++col){
+            if(isValid(curr, row, col, n)){
+                curr[row][col] = 'Q';
+                dfs(res, curr, row + 1, n);
+                curr[row][col] = '.';
+            }
+        }
+    }
+};
+```
+
 # Graphs
 
 ## 200. Number of Islands
@@ -3050,6 +3154,44 @@ public:
 };
 ```
 
+## 286. Walls and Gates
+
+Notes: BFS `q<i, j, dist from gate>`.
+
+```cpp
+// O(m * n) time
+// O(m * n) space
+class Solution {
+    using T = tuple<int, int, int>;
+public:
+    void wallsAndGates(vector<vector<int>>& rooms) {
+        queue<T> q; //i, j, dist from gate
+
+        for(int i = 0; i < rooms.size(); ++i){
+            for(int j = 0; j < rooms[0].size(); ++j){
+                if(rooms[i][j] == 0) {
+                    q.emplace(i + 1, j, 1);
+                    q.emplace(i - 1, j, 1);
+                    q.emplace(i, j + 1, 1);
+                    q.emplace(i, j - 1, 1);
+                }
+            }
+        }
+
+        while(!q.empty()){
+            auto [i, j, dis] = q.front(); q.pop();
+            if(i < 0 or j < 0 or i >= rooms.size() or j >= rooms[0].size()) continue;
+            if(rooms[i][j] != INT_MAX) continue; //vistied or wall
+            rooms[i][j] = dis;
+            q.emplace(i + 1, j, dis + 1);
+            q.emplace(i - 1, j, dis + 1);
+            q.emplace(i, j + 1, dis + 1);
+            q.emplace(i, j - 1, dis + 1);
+        } 
+    }
+};
+```
+
 ## 994. Rotting Oranges
 
 Notes: BFS using T = i, j, time. first pass for loop if grid[i][j] == 2, add 4 dirs to q. else if 1 inc fresh count. do bfs and inc max time. return fresh == 0 ? maxTime : -1; 
@@ -3087,6 +3229,45 @@ public:
             q.emplace(i, j - 1, time + 1);
         }
         return fresh == 0 ? maxTime : -1;
+    }
+};
+```
+
+## 207. Course Schedule
+
+Notes: vector based dfs + visited vector (0 unvisited, 1 curr visit, 2 visited). bool dfs() where return false if cycle. in main func for(i, n) if(v[i] == 0 and !dfs) return false. 
+
+```cpp
+// O(V+E) Time
+// O(V) Space
+
+class Solution {
+public:
+    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {
+        vector<vector<int>> graph(numCourses);
+        vector<int> visited (numCourses, 0); //0 unvisited, 1 curr visit, 2 visited
+        
+        for(auto& e : prerequisites){
+            graph[e[1]].emplace_back(e[0]);
+        }
+
+        for(int i = 0; i < graph.size(); ++i) {
+            if(visited[i] == 0 and !dfs(graph, visited, i)) return false;
+        }
+        
+        return true;
+    }
+
+    bool dfs(vector<vector<int>>& graph, vector<int>& visited, int node){
+        if(visited[node] == 1) return false; //cycle
+        if(visited[node] == 2) return true;
+        
+        visited[node] = 1;
+        for(const auto& next: graph[node]){
+            if(!dfs(graph, visited, next)) return false;
+        }
+        visited[node] = 2;
+        return true;
     }
 };
 ```
