@@ -852,28 +852,25 @@ else make sure that the cars have the slower time once merging to become a fleet
 // O(N) Space
 
 class Solution {
+    using T = pair<int, float>;
 public:
     int carFleet(int target, vector<int>& position, vector<int>& speed) {
-        vector<pair<int, float>> vec; // pos, target - position / speed (unit distance)
-        for(int i = 0; i < size(position); ++i) {
-            vec.push_back({position[i], float(target - position[i]) / speed[i]});
+        vector<T> v; // pos, target - position / speed (unit distance)
+        for(int i = 0; i < position.size(); ++i){
+            v.emplace_back(position[i], (target - position[i]) / (float)speed[i]);
         }
-        sort(vec.begin(), vec.end());
-        stack<pair<int, float>> s;
-        for(auto pair: vec) s.push(pair);
+        sort(v.begin(), v.end());
         int fleets = 0;
+        stack<T> s;
+        for(auto t : v) s.emplace(t);
         while(!s.empty()){
             auto [pos, time] = s.top(); s.pop();
-            if(s.empty() || time < s.top().second) { // If no cars in front or can't catch up
-                fleets++; // This car forms a new fleet.
-            } else {
-                // If the current car can catch up to the car in front, merge them into one fleet.
-                // we only increase `fleets` when we find a car that can't catch up.
-                // Adjust the time of the car in front if the current car takes longer to reach the target.
-                if(time > s.top().second) s.top().second = time; 
-                    // Update the time of the car in front to reflect this car joining the fleet, 
-                    // ensuring the fleet's speed is dictated by the slowest car.
-            }
+            if(s.empty()){ fleets++; continue; };
+            
+            auto& [nextPos, nextTime] = s.top();
+            if(time < nextTime) fleets++; //if car cant catch up
+            else nextTime = max(time, nextTime); //update with slowest fleet speed
+        
         }
         return fleets;
     }
@@ -3268,6 +3265,355 @@ public:
         }
         visited[node] = 2;
         return true;
+    }
+};
+```
+
+## 210. Course Schedule II
+
+Notes: course schedule 1 + pass in result vector as reference and add values to result vector after marking it as visited in dfs. 
+
+```cpp
+// O(V+E) time
+// O(V+E) space
+
+class Solution {
+public:
+    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
+        vector<vector<int>> graph(numCourses);
+        vector<int> visited (numCourses, 0); //0, 1, 2
+
+        for(auto e: prerequisites){
+            graph[e[0]].emplace_back(e[1]); //reverse order
+        }
+        vector<int> result;
+        for(int i = 0; i < numCourses; ++i){
+            if(visited[i] == 0 and !dfs(graph, visited, i, result)) return {}; 
+        }
+        return result;
+    }
+    bool dfs(vector<vector<int>>& graph, vector<int>& visited, int node, vector<int>& result){
+        if(visited[node] == 1) return false; // cycle
+        if(visited[node] == 2) return true; // visited
+        visited[node] = 1;
+        for(const auto& next : graph[node]) {
+            if(!dfs(graph, visited, next, result)) return false;
+        }
+        visited[node] = 2;
+        result.emplace_back(node);
+        return true;
+    }
+};
+```
+
+## 261. Graph Valid Tree
+
+Notes: vector graph setup, with vector visited (0,1,2) and single dfs from any start node. check if all visited and return true. 
+
+```cpp
+//O(V+E) time
+//O(V+E) space
+class Solution {
+public:
+    bool validTree(int n, vector<vector<int>>& edges) {
+        vector<int> visited(n, 0);//0, 1, 2
+        vector<vector<int>> graph (n); 
+
+        for(auto& e : edges){
+            graph[e[0]].emplace_back(e[1]);
+            graph[e[1]].emplace_back(e[0]);
+        }
+        
+        //only need one dfs
+        if(!dfs(graph, visited, 0, -1)) return false;
+        for(auto& n : visited) if(n != 2) return false;
+
+        return true;
+    }
+
+    bool dfs(vector<vector<int>>& graph, vector<int>& visited, int node, int prev){
+        if(visited[node] == 1) return false;
+        if(visited[node] == 2) return true;
+        visited[node] = 1;
+        for(auto& next: graph[node]){
+            if(next == node) continue;
+            if(next == prev) continue;
+            if(!dfs(graph, visited, next, node)) return false;
+        }
+        visited[node] = 2;
+        return true;
+    }
+};
+```
+
+## 323. Number of Connected Components in an Undirected Graph
+
+Notes: vector graph with visited vector, dfs on each node if not visited and incremement count
+
+```cpp
+//O(V+E) time 
+//O(V+E) space
+class Solution {
+public:
+    int countComponents(int n, vector<vector<int>>& edges) {
+        vector<vector<int>> graph (n);
+        for(auto e : edges){
+            graph[e[0]].emplace_back(e[1]);
+            graph[e[1]].emplace_back(e[0]);
+        }
+        vector<int> visited (n, 0);
+        int components = 0;
+        for(int i = 0; i < n; ++i){
+            if(visited[i] == 0) {
+                dfs(graph, visited, i);
+                components++;
+            }
+        }
+        return components;
+    }
+    void dfs(vector<vector<int>>& graph, vector<int>& visited, int node){
+        if(visited[node] == 2) return;
+        visited[node] = 2;
+        for(auto next : graph[node]){
+            dfs(graph, visited, next);
+        }
+    }
+};
+```
+
+## 684. Redundant Connection
+
+Notes: union find. if(find_set edge[0] == edge[1]) //return edge
+
+```cpp
+//O(E * N) Time
+//O(N) Space
+struct DisjointSet {
+    vector<int> parent;
+    vector<int> size;
+
+    DisjointSet(int maxSize) {
+        parent.resize(maxSize);
+        size.resize(maxSize);
+        for (int i = 0; i < maxSize; i++) {
+            parent[i] = i;
+            size[i] = 1;
+        }
+    }
+
+    int find_set(int v) {
+        if (v == parent[v])
+            return v;
+        return parent[v] = find_set(parent[v]);
+    }
+
+    void union_set(int a, int b) {
+        a = find_set(a);
+        b = find_set(b);
+        if (a != b) {
+            if (size[a] < size[b])
+                swap(a, b);
+            parent[b] = a;
+            size[a] += size[b];
+        }
+    }
+};
+
+class Solution {
+public:
+    vector<int> findRedundantConnection(vector<vector<int>>& edges) {
+        DisjointSet S(edges.size() + 1);
+        for(const auto& edge : edges){
+            // If both nodes are in the same set, the edge is redundant.
+            if (S.find_set(edge[0]) == S.find_set(edge[1])) return edge;  
+            S.union_set(edge[0], edge[1]);
+        }
+        return {-1, -1};
+    }
+};
+```
+
+## 127. Word Ladder
+
+Notes: BFS, change 1 letter at a time (neighbors), if in set add to queue (and erase from set), else skip
+```cpp
+//Time: O(m^2 x n) -> m = length of each word, n = # of words in input word list
+//Space: O(m^2 x n)
+
+class Solution {
+public:
+    int ladderLength(string beginWord, string endWord, vector<string>& wordList) {
+        unordered_set<string> set (wordList.begin(), wordList.end());
+        int result = 1;
+        queue<string> q;
+        q.emplace(beginWord);
+        while(!q.empty()){
+            int c = q.size();
+            for(int i = 0; i < c; ++i){
+                auto word = q.front(); q.pop();
+                if(word == endWord) return result;
+                set.erase(word); //for a b c case;
+
+                for(int j = 0; j < word.size(); ++j){
+                    char c = word[j];
+                    for(int k = 0; k < 26; ++k){
+                        word[j] = k + 'a';
+                        if(set.find(word) != set.end()){
+                            q.emplace(word);
+                            set.erase(word);
+                        }
+                    }
+                    word[j] = c;
+                }
+                
+            }
+            result++;
+        }
+        return 0;
+    }
+};
+```
+
+# Advanced Graphs
+
+## 332. Reconstruct Itinerary
+
+Notes: map<string, minheap>> graph, dfs(graph, "JFK", result) and reverse result vector bc we add itinerary after all recursive calls
+
+```cpp
+// O(E Log E) Time
+// O(V + E) Space
+class Solution {
+public:
+    vector<string> findItinerary(vector<vector<string>>& tickets) {
+        unordered_map<string, priority_queue<string, vector<string>, greater<>>> graph;
+        for(const auto& tix : tickets){
+            graph[tix[0]].emplace(tix[1]);
+        }
+        vector<string> result;
+        dfs(graph, "JFK", result);
+        // Since we add in reverse order, reverse the result before returning
+        reverse(result.begin(), result.end());
+        return result;
+    }
+    void dfs(unordered_map<string, priority_queue<string, vector<string>, greater<>>>& graph, const string& node, vector<string>& result){
+        while(!graph[node].empty()){
+            const auto next = graph[node].top(); graph[node].pop();
+            dfs(graph, next, result);
+        }
+        // Add the airport to the itinerary after all the recursive calls
+        result.emplace_back(node);
+    }
+};
+```
+
+## 1584. Min Cost to Connect All Points
+
+Notes: Prim (minheap with pair<manhattan dist, index of point> and "visited" set)
+
+```cpp
+// O(N^2logN) Time
+// O(N^2) Space
+class Solution {
+    using T = pair<int, int>; //dist, index
+public:
+    int minCostConnectPoints(vector<vector<int>>& points) {
+        priority_queue<T, vector<T>, greater<>> pq;
+        unordered_set<int> visited; // index of point
+
+        pq.emplace(0, 0); 
+        int result = 0;
+
+        while(!pq.empty()){
+            auto [mhd, node] = pq.top(); pq.pop();
+            if(visited.size() == points.size()) return result;
+
+            if(visited.find(node) != visited.end()) continue;
+            visited.emplace(node);
+            result += mhd;
+
+            for(int next = 0; next < points.size(); ++next){
+                if(next == node) continue;
+                pq.emplace(abs(points[node][0] - points[next][0]) + abs(points[node][1] - points[next][1]), next);
+            }
+        }
+        return result;
+
+    }
+};
+```
+
+## 743. Network Delay Time
+
+Notes: djikstra with minheap pq and visited vector. 
+
+```cpp
+// O((V + E)logV) Time
+// O(V + E) Space
+
+class Solution {
+public:
+    int networkDelayTime(vector<vector<int>>& times, int n, int k) {
+        // Create a graph: node -> vector of pairs (neighboring node, time)
+        vector<vector<pair<int,int>>> graph(n);
+        for(const auto& t: times) {
+            graph[t[0] - 1].emplace_back(t[1] - 1, t[2]); //1 index'd
+        }
+
+        // Min-heap to select the node with the minimum delay time
+        // Pair format: (time, node)
+        priority_queue<pair<int, int>, vector<pair<int,int>>, greater<>> pq;
+        pq.emplace(0, k - 1); //time 0, start node k
+        vector<bool> visited(n);
+        int result = 0;
+        while(!pq.empty()){
+            auto [time, node] = pq.top(); pq.pop();
+            if(visited[node]) continue;
+            result = time; 
+            visited[node] = true;
+            for(const auto& [next, newtime] : graph[node]){
+                if(!visited[next]) pq.emplace(newtime + time, next);
+            }
+        }
+        for(auto b : visited) if(!b) return -1;
+        return result;
+    }
+};
+```
+
+## 778. Swim in Rising Water
+
+Notes: djikstra with tuple<max(grid[nx][ny], time), nx, ny>
+
+```cpp
+//O((V + E)logV) -> O(n^2 logn) Time 
+//O(V + E) -> O(n^2) Space
+
+class Solution {
+    using T = tuple<int, int, int>; //time, x, y
+public:
+    int swimInWater(vector<vector<int>>& grid) {
+        priority_queue<T, vector<T>, greater<>> pq;
+        vector<vector<bool>> visited (grid.size(), vector<bool> (grid[0].size(), false));
+        vector<pair<int,int>> dirs = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+
+        pq.emplace(grid[0][0], 0, 0);
+
+        while(!pq.empty()){
+            auto [time, x, y] = pq.top(); pq.pop();
+            if(x < 0 or y < 0 or x >= grid.size() or y >= grid[0].size()) continue;
+            if(visited[x][y]) continue;
+            visited[x][y] = true;
+            
+            if(x == grid.size() - 1 and y == grid[0].size() - 1) return time;
+
+            for(auto [nx, ny] : dirs){
+                if(x + nx >= 0 and y + ny >= 0 and x + nx < grid.size() and y + ny < grid.size() and !visited[x + nx][y + ny]){
+                    pq.emplace(max(time, grid[x + nx][y + ny]), x + nx, y + ny);
+                }
+            }
+        }
+        return -1;
     }
 };
 ```
